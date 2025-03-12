@@ -30,6 +30,7 @@ public sealed class DataService
     public async Task Save(List<Number> dataList)
     {
         this._logger.LogInformation("Save");
+        // Implement the save logic here
         throw new NotImplementedException();
     }
 
@@ -41,6 +42,7 @@ public sealed class DataService
     public IEnumerable<Number> Get(int count)
     {
         this._logger.LogInformation("Get");
+        // Implement the get logic here
         throw new NotImplementedException();
     }
 
@@ -51,6 +53,7 @@ public sealed class DataService
     public IEnumerable<Number> GetAll()
     {
         this._logger.LogInformation("GetAll");
+        // Implement the get all logic here
         throw new NotImplementedException();
     }
 }
