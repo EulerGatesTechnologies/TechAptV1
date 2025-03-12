@@ -3,6 +3,9 @@
 using Serilog;
 using TechAptV1.Client.Components;
 
+using Microsoft.EntityFrameworkCore;
+using TechAptV1.Client.Services;
+
 namespace TechAptV1.Client
 {
     public class Program
@@ -21,6 +24,11 @@ namespace TechAptV1.Client
 
                 // Add services to the container.
                 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
+
+                builder.Services.AddDbContext<DataContext>(options =>
+                        options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
+
+                builder.Services.AddScoped<IDataService, DataService>();
 
                 var app = builder.Build();
 

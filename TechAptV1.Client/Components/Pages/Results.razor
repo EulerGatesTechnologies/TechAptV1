@@ -1,6 +1,7 @@
 ﻿@page "/results"
-@using TechAptV1.Client.Models
-@using TechAptV1.Client.Services
+
+@inject IDataService DataService
+@inject IJSRuntime JS
 
 <h3>Results</h3>
 <p>The table shows the top N numbers generated. The download XML and Binary feature allows you to download the entire data set</p>
@@ -35,13 +36,21 @@
 
     private List<Number> numbers = new ();
 
+    protected override async Task OnInitializedAsync()
+    {
+        numbers = await DataService.GetAllAsync();
+    }
+
     /// <summary>
     /// Fetches all the records, serializes them to XML and downloads the file
     /// </summary>
     private async Task DownloadXmlAsync()
     {
         this.Logger.LogInformation("DownloadXml");
-        throw new NotImplementedException();
+
+        string xml = await DataService.SerializeToXmlAsync();
+
+        await JS.InvokeVoidAsync("downloadFile", "numbers.xml", xml, "text/xml");
     }
 
     /// <summary>
