@@ -1,5 +1,8 @@
 ﻿@page "/results"
 
+@using TechAptV1.Client.Services;
+@using TechAptV1.Client.Models;
+
 @inject IDataService DataService
 @inject IJSRuntime JS
 
@@ -38,7 +41,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        numbers = await DataService.GetAllAsync();
+        //numbers = await DataService.GetAllAsync();
     }
 
     /// <summary>
