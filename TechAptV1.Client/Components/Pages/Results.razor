@@ -6,8 +6,8 @@
 <p>The table shows the top N numbers generated. The download XML and Binary feature allows you to download the entire data set</p>
 
 <div>
-    <button class="btn btn-primary" @onclick="(async () => await this.DownloadXml())">Download XML</button>
-    <button class="btn btn-primary" @onclick="(async () => await this.DownloadBinary())">Download Binary</button>
+    <button class="btn btn-primary" @onclick="(async () => await this.DownloadXmlAsync())">Download XML</button>
+    <button class="btn btn-primary" @onclick="(async () => await this.DownloadBinaryAsync())">Download Binary</button>
 </div>
 <div>
     <table class="table">
@@ -38,7 +38,7 @@
     /// <summary>
     /// Fetches all the records, serializes them to XML and downloads the file
     /// </summary>
-    private async Task DownloadXml()
+    private async Task DownloadXmlAsync()
     {
         this.Logger.LogInformation("DownloadXml");
         throw new NotImplementedException();
@@ -47,7 +47,7 @@
     /// <summary>
     /// Fetches all the records, serializes them to Binary and downloads the file
     /// </summary>
-    private async Task DownloadBinary()
+    private async Task DownloadBinaryAsync()
     {
         this.Logger.LogInformation("DownloadBinary");
         throw new NotImplementedException();
