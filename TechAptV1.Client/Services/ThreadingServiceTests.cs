@@ -32,9 +32,9 @@ public class ThreadingServiceTests
 
         // Assert
         actualResult.Numbers.ShouldBeEmpty();
-        actualResult.TotalCount.ShouldBe(0);
-        actualResult.OddCount.ShouldBe(0);
-        actualResult.EvenCount.ShouldBe(0);
-        actualResult.PrimeCount.ShouldBe(0);
+        actualResult.TotalNumbersCount.ShouldBe(0);
+        actualResult.OddNumbersCount.ShouldBe(0);
+        actualResult.EvenNumbersCount.ShouldBe(0);
+        actualResult.PrimeNumbersCount.ShouldBe(0);
     }
 }
