@@ -46,11 +46,11 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
         throw new NotImplementedException();
     }
 
-    public Task<(List<Number> Numbers, int TotalNumbersCount, int OddNumbersCount, int EvenNumbersCount, int PrimeNumbersCount)> ComputeNumbersAsync(CancellationToken cancellationToken)
+    public async Task<(List<Number> Numbers, int TotalNumbersCount, int OddNumbersCount, int EvenNumbersCount, int PrimeNumbersCount)> ComputeNumbersAsync(CancellationToken cancellationToken)
     {
         var numbers = new List<Number>();
 
-         return Task.FromResult((numbers, _totalNumbers, _oddNumbers, _evenNumbers, _primeNumbers));
+         return await Task.FromResult((numbers, _totalNumbers, _oddNumbers, _evenNumbers, _primeNumbers));
     }
 }
 
