@@ -48,7 +48,9 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
 
     public Task<(List<Number> Numbers, int TotalCount, int OddCount, int EvenCount)> ComputeNumbersAsync(CancellationToken cancellationToken)
     {
-        throw new NotImplementedException();
+        var numbers = new List<Number>();
+
+         return Task.FromResult((numbers, _totalNumbers, _oddNumbers, _evenNumbers));
     }
 }
 
