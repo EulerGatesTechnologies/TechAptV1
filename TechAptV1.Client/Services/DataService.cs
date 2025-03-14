@@ -9,14 +9,6 @@ using System.Xml.Serialization;
 
 namespace TechAptV1.Client.Services;
 
-public interface IDataService
-{
-    Task<string> SerializeToXmlAsync();
-
-    Task<IEnumerable<Number>> GetAsync(int count);
-
-    Task<IEnumerable<Number>> GetAllAsync();
-}
 /// <summary>
 /// Data Access Service for interfacing with the SQLite Database
 /// </summary>
@@ -91,4 +83,13 @@ public sealed class DataService : IDataService
 
         return stringWriter.ToString();
     }
+}
+
+public interface IDataService
+{
+    Task<string> SerializeToXmlAsync();
+
+    Task<IEnumerable<Number>> GetAsync(int count);
+
+    Task<IEnumerable<Number>> GetAllAsync();
 }

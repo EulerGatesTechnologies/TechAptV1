@@ -3,8 +3,8 @@
 <h3>Threading &amp; Data Persistence</h3>
 
 <div>
-    <button class="btn btn-primary" @onclick="(async () => await this.Start())">Start</button>
-    <button class="btn btn-primary" @onclick="(async () => await this.Save())">Save</button>
+    <button class="btn btn-primary" @onclick="(async () => await this.StartAsync())">Start</button>
+    <button class="btn btn-primary" @onclick="(async () => await this.SaveAsync())">Save</button>
 </div>
 <div>
     <hr>
@@ -27,13 +27,14 @@
     private int _primeNumbers = 0;
     private int _totalNumbers = 0;
 
-    private async Task Start()
+    private async Task StartAsync()
     {
         this.Logger.LogInformation("Start");
+
         throw new NotImplementedException();
     }
 
-    private async Task Save()
+    private async Task SaveAsync()
     {
         this.Logger.LogInformation("Save");
         throw new NotImplementedException();

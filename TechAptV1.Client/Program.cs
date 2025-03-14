@@ -30,6 +30,8 @@ namespace TechAptV1.Client
 
                 builder.Services.AddScoped<IDataService, DataService>();
 
+                builder.Services.AddScoped<IThreadingService, ThreadingService>();
+
                 var app = builder.Build();
 
                 // Configure the HTTP request pipeline.

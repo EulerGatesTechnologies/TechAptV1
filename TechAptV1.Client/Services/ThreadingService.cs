@@ -1,5 +1,7 @@
 ﻿// Copyright © 2025 Always Active Technologies PTY Ltd
 
+using TechAptV1.Client.Models;
+
 namespace TechAptV1.Client.Services;
 
 /// <summary>
@@ -7,7 +9,8 @@ namespace TechAptV1.Client.Services;
 /// </summary>
 /// <param name="logger"></param>
 /// <param name="dataService"></param>
-public sealed class ThreadingService(ILogger<ThreadingService> logger, DataService dataService)
+public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataService dataService)
+: IThreadingServices
 {
     private int _oddNumbers = 0;
     private int _evenNumbers = 0;
@@ -38,4 +41,9 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, DataServi
         // Implement the save logic here
         throw new NotImplementedException();
     }
+}
+
+public interface IThreadingService
+{
+    Task<(List<Number> Numbers, int TotalCount, int OddCount, int EvenCount)> ComputeNumbersAsync(CancellationToken cancellationToken);
 }
