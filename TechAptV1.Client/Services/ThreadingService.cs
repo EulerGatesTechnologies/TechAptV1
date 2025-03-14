@@ -10,8 +10,12 @@ namespace TechAptV1.Client.Services;
 /// <param name="logger"></param>
 /// <param name="dataService"></param>
 public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataService dataService)
-: IThreadingServices
+: IThreadingService
 {
+    private readonly object _lock = new(); // This will be used for Thead-Safety lock on shared global variable.
+    private const int MaxEntries = 10_000_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
+    private const int ThresholdForEven = 2_500_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
+
     private int _oddNumbers = 0;
     private int _evenNumbers = 0;
     private int _primeNumbers = 0;
@@ -39,6 +43,11 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
     {
         logger.LogInformation("Save");
         // Implement the save logic here
+        throw new NotImplementedException();
+    }
+
+    public Task<(List<Number> Numbers, int TotalCount, int OddCount, int EvenCount)> ComputeNumbersAsync(CancellationToken cancellationToken)
+    {
         throw new NotImplementedException();
     }
 }
