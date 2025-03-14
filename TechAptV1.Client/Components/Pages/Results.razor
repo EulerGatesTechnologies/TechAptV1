@@ -41,7 +41,7 @@
 
     protected override async Task OnInitializedAsync()
     {
-        //numbers = await DataService.GetAllAsync();
+        numbers = (await DataService.GetAsync(20)).ToList();
     }
 
     /// <summary>
