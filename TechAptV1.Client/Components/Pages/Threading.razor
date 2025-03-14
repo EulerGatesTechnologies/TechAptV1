@@ -23,10 +23,10 @@
     <hr>
     <h4>Numbers:</h4>
     <ul>
-        <li>Odd:    <strong>@this.Result?.OddNumbersCount</strong></li>
-        <li>Even:   <strong>@this.Result?.EvenNumbersCount</strong></li>
-        <li>Prime:  <strong>@this.Result?.PrimeNumbersCount</strong></li>
-        <li>Total:  <strong>@this.Result?.TotalNumbersCount</strong></li>
+        <li>Odd:    <strong>@(this.Result?.OddNumbersCount      ??  0)</strong></li>
+        <li>Even:   <strong>@(this.Result?.EvenNumbersCount     ??  0)</strong></li>
+        <li>Prime:  <strong>@(this.Result?.PrimeNumbersCount    ??  0)</strong></li>
+        <li>Total:  <strong>@(this.Result?.TotalNumbersCount    ??  0)</strong></li>
     </ul>
     <hr>
 </div>
@@ -35,14 +35,9 @@
 
     [Inject] public required ILogger<Threading> Logger { get; set; }
 
-    private int _oddNumbers = 0;
-    private int _evenNumbers = 0;
-    private int _primeNumbers = 0;
-    private int _totalNumbers = 0;
-
     private bool IsComputing { get; set; } = false;
 
-    private CancellationTokenSource CancellationTokenSource { get; set; } = new();
+    private CancellationTokenSource? CancellationTokenSource { get; set; }
 
     private (List<Number> Numbers, int TotalNumbersCount, int OddNumbersCount, int EvenNumbersCount, int PrimeNumbersCount)? Result { get; set;}
 
@@ -54,6 +49,8 @@
 
         try
         {
+            CancellationTokenSource = new ();
+
             Result = await ThreadingService.ComputeNumbersAsync(CancellationTokenSource.Token);
         }
         catch (OperationCanceledException)
