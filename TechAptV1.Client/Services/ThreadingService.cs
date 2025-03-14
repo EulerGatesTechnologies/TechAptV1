@@ -17,24 +17,19 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
     private const int ThresholdForEven = 2_500_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
 
     private int _oddNumbers = 0;
-    private int _evenNumbers = 0;
-    private int _primeNumbers = 0;
-    private int _totalNumbers = 0;
-
     public int GetOddNumbers() => _oddNumbers;
+
+    private int _evenNumbers = 0;
     public int GetEvenNumbers() => _evenNumbers;
+
+    private int _primeNumbers = 0;
     public int GetPrimeNumbers() => _primeNumbers;
+
+    private int _totalNumbers = 0;
     public int GetTotalNumbers() => _totalNumbers;
 
-    /// <summary>
-    /// Start the random number generation process
-    /// </summary>
-    public async Task Start()
-    {
-        logger.LogInformation("Start");
-        // Implement the threading logic here
-        throw new NotImplementedException();
-    }
+    private List<Number> _numbers = new();
+    public List<Number> GetNumbers() => _numbers;
 
     /// <summary>
     /// Persist the results to the SQLite database
@@ -46,15 +41,28 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
         throw new NotImplementedException();
     }
 
-    public async Task<(List<Number> Numbers, int TotalNumbersCount, int OddNumbersCount, int EvenNumbersCount, int PrimeNumbersCount)> ComputeNumbersAsync(CancellationToken cancellationToken)
+    /// <summary>
+    /// Start the random number generation process
+    /// </summary>
+    public async Task StartAsync()
     {
-        var numbers = new List<Number>();
+        logger.LogInformation(nameof(StartAsync));
 
-         return await Task.FromResult((numbers, _totalNumbers, _oddNumbers, _evenNumbers, _primeNumbers));
+        // Implement the threading logic here
+
+        _numbers = new ();
+
+        _totalNumbers = _numbers.Count;
+
+        _oddNumbers = _numbers.Count(n => n.Value % 2 != 0 && n.Value > 0);
+
+        _evenNumbers = _numbers.Count(n => n.Value % 2 == 0 && n.Value > 0);
+
+        _primeNumbers = _numbers.Count(n => n.IsPrime == 1); // Assumes prime checks have been done & stored in the numbers list.
     }
 }
 
 public interface IThreadingService
 {
-    Task<(List<Number> Numbers, int TotalNumbersCount, int OddNumbersCount, int EvenNumbersCount, int PrimeNumbersCount)> ComputeNumbersAsync(CancellationToken cancellationToken);
+    Task StartAsync();
 }

@@ -36,9 +36,6 @@
     [Inject] public required ILogger<Threading> Logger { get; set; }
 
     private bool IsComputing { get; set; } = false;
-
-    private CancellationTokenSource? CancellationTokenSource { get; set; }
-
     private (List<Number> Numbers, int TotalNumbersCount, int OddNumbersCount, int EvenNumbersCount, int PrimeNumbersCount)? Result { get; set;}
 
     private async Task StartAsync()
@@ -49,9 +46,7 @@
 
         try
         {
-            CancellationTokenSource = new ();
-
-            Result = await ThreadingService.ComputeNumbersAsync(CancellationTokenSource.Token);
+            await ThreadingService.StartAsync();
         }
         catch (OperationCanceledException)
         {

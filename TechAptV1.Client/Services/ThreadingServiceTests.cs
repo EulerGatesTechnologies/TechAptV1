@@ -12,7 +12,7 @@ public class ThreadingServiceTests
 {
     private readonly Mock<ILogger<ThreadingService>> _loggerMock;
     private readonly Mock<IDataService> _dataServiceMock;
-    private readonly IThreadingService _threadingService;
+    private readonly ThreadingService _threadingService;
 
     public ThreadingServiceTests()
     {
@@ -22,19 +22,19 @@ public class ThreadingServiceTests
     }
 
     [Fact]
-    public async Task ComputeNumbersAsync_WhenNoNumbersAreProvided_ShouldReturnEmptyNumbersListWithAllCountsZero()
+    public async Task StartAsync_WhenNoNumbersAreProvided_ShouldReturnEmptyNumbersListWithAllCountsZero()
     {
         // Arrange
         var cancellationToken = CancellationToken.None;
 
         // Act
-        var actualResult = await _threadingService.ComputeNumbersAsync(cancellationToken);
+        await _threadingService.StartAsync();
 
         // Assert
-        actualResult.Numbers.ShouldBeEmpty();
-        actualResult.TotalNumbersCount.ShouldBe(0);
-        actualResult.OddNumbersCount.ShouldBe(0);
-        actualResult.EvenNumbersCount.ShouldBe(0);
-        actualResult.PrimeNumbersCount.ShouldBe(0);
+        _threadingService.GetNumbers().ShouldBeEmpty();
+        _threadingService.GetTotalNumbers().ShouldBe(0);
+        _threadingService.GetOddNumbers().ShouldBe(0);
+        _threadingService.GetEvenNumbers().ShouldBe(0);
+        _threadingService.GetPrimeNumbers().ShouldBe(0);
     }
 }
