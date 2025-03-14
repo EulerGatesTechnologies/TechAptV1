@@ -22,7 +22,7 @@
         </tr>
         </thead>
         <tbody>
-        @foreach (var item in this.numbers)
+        @foreach (var item in this.Numbers)
         {
             <tr>
                 <td>@item.Value</td>
@@ -37,11 +37,11 @@
 
     [Inject] public required ILogger<Threading> Logger { get; set; }
 
-    private List<Number> numbers = new ();
+    private List<Number> Numbers { get; set; } = new ();
 
     protected override async Task OnInitializedAsync()
     {
-        numbers = (await DataService.GetAsync(20)).ToList();
+        Numbers = (await DataService.GetAsync(20)).ToList();
     }
 
     /// <summary>
