@@ -33,9 +33,9 @@ public sealed class DataService : IDataService
     /// <param name="configuration"></param>
     public DataService(ILogger<DataService> logger, IConfiguration configuration, DataContext context)
     {
-        this._logger = logger;
-        this._configuration = configuration;
-        this._context = context;
+        _logger = logger;
+        _configuration = configuration;
+        _context = context;
     }
 
     /// <summary>
@@ -44,7 +44,7 @@ public sealed class DataService : IDataService
     /// <param name="dataList"></param>
     public async Task Save(List<Number> dataList)
     {
-        this._logger.LogInformation("Save");
+        _logger.LogInformation(nameof(Save));
 
         await _context.AddRangeAsync(dataList);
 
@@ -58,7 +58,7 @@ public sealed class DataService : IDataService
     /// <returns></returns>
     public async Task<IEnumerable<Number>> GetAsync(int count)
     {
-        this._logger.LogInformation("Get");
+        _logger.LogInformation(nameof(GetAsync));
 
         return await _context
             .Numbers
@@ -72,21 +72,23 @@ public sealed class DataService : IDataService
     /// <returns></returns>
     public async Task<IEnumerable<Number>> GetAllAsync()
     {
-        this._logger.LogInformation("GetAll");
+        _logger.LogInformation(nameof(GetAllAsync));
 
         return await _context.Numbers.ToListAsync();
     }
 
     public async Task<string> SerializeToXmlAsync()
     {
+        _logger.LogInformation(nameof(SerializeToXmlAsync));
+
         var numbers = await _context.Numbers.ToListAsync();
 
-        var xmlSerializer = new XmlSerializer(typeof(List<Number>));     
+        var xmlSerializer = new XmlSerializer(typeof(List<Number>));
 
         using var stringWriter = new StringWriter();
-        
+
         xmlSerializer.Serialize(stringWriter, numbers);
-        
+
         return stringWriter.ToString();
     }
 }
