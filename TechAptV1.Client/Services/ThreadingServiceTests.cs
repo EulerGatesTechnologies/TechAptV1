@@ -22,7 +22,7 @@ public class ThreadingServiceTests
     }
 
     [Fact]
-    public async Task ComputeNumbersAsync_WhenNoNumbersAreProvided_ShouldReturnEmptyListAndCounts()
+    public async Task ComputeNumbersAsync_WhenNoNumbersAreProvided_ShouldReturnEmptyNumbersListWithAllCountsZero()
     {
         // Arrange
         var cancellationToken = CancellationToken.None;
@@ -35,5 +35,6 @@ public class ThreadingServiceTests
         actualResult.TotalCount.ShouldBe(0);
         actualResult.OddCount.ShouldBe(0);
         actualResult.EvenCount.ShouldBe(0);
+        actualResult.PrimeCount.ShouldBe(0);
     }
 }
