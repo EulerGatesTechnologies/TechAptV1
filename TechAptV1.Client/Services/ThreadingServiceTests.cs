@@ -12,29 +12,61 @@ public class ThreadingServiceTests
 {
     private readonly Mock<ILogger<ThreadingService>> _loggerMock;
     private readonly Mock<IDataService> _dataServiceMock;
-    private readonly ThreadingService _threadingService;
+    private ThreadingService _threadingService;
 
     public ThreadingServiceTests()
     {
         _loggerMock = new Mock<ILogger<ThreadingService>>();
-        _dataServiceMock = new Mock<IDataService>();
-        _threadingService = new ThreadingService(_loggerMock.Object, _dataServiceMock.Object);
+        _dataServiceMock = new Mock<IDataService>();        
     }
 
     [Fact]
-    public async Task StartAsync_WhenNoNumbersAreProvided_ShouldReturnEmptyNumbersListWithAllCountsZero()
+    public async Task StartAsync_WhenNoNumbersAreProvided_ThenShouldReturnEmptyNumbersListWithAllCountsZero()
     {
         // Arrange
-        var cancellationToken = CancellationToken.None;
+        int expectedToBeZero = 0;
+        
+        _dataServiceMock
+            .Setup(x => x.GetAllAsync())
+            .ReturnsAsync(new List<Number>());
+        
+        _threadingService = new ThreadingService(_loggerMock.Object, _dataServiceMock.Object);
 
         // Act
         await _threadingService.StartAsync();
+        var globalNumbers = _threadingService.GetNumbers();
 
         // Assert
-        _threadingService.GetNumbers().ShouldBeEmpty();
-        _threadingService.GetTotalNumbers().ShouldBe(0);
-        _threadingService.GetOddNumbers().ShouldBe(0);
-        _threadingService.GetEvenNumbers().ShouldBe(0);
-        _threadingService.GetPrimeNumbers().ShouldBe(0);
+        globalNumbers.ShouldBeEmpty();
+        globalNumbers.Count.ShouldBe(expectedToBeZero);
+        _threadingService.GetTotalNumbers().ShouldBe(expectedToBeZero);
+        _threadingService.GetOddNumbers().ShouldBe(expectedToBeZero);
+        _threadingService.GetEvenNumbers().ShouldBe(expectedToBeZero);
+        _threadingService.GetPrimeNumbers().ShouldBe(expectedToBeZero);
+    }
+
+    [Fact]
+    public async Task StartAsync_WhenNumbersAreProvided_ThenShouldProduceExactly10mSortedNumbers()
+    {
+        // Arrange        
+        int expectedToBe10m = 10_000_000;
+
+        // Act
+         await _threadingService.StartAsync();
+        var globalNumbers = _threadingService.GetNumbers();
+
+        // Assert        
+        globalNumbers.ShouldNotBeEmpty();
+        globalNumbers.Count.ShouldBe(expectedToBe10m); 
+        _threadingService.GetTotalNumbers().ShouldBe(expectedToBe10m);
+        // Ensure list is sorted
+        for (int i = 1; i < globalNumbers.Count; i++)
+        {
+            globalNumbers[i - 1].Value.ShouldBeLessThan(globalNumbers[i].Value);
+        }
+        // Even if we don’t know exact odd/prime/even counts, we can check totals.
+        int oddCount = globalNumbers.Count(n => n.Value % 2 != 0);
+        int evenCount = globalNumbers.Count(n => n.Value % 2 == 0);
+        (oddCount + evenCount).ShouldBe(expectedToBe10m);
     }
 }
