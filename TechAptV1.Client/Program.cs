@@ -27,13 +27,13 @@ namespace TechAptV1.Client
                 builder.Services.AddRazorComponents().AddInteractiveServerComponents();
 
                 builder.Services.AddDbContext<DataContext>(options =>
-                        options.UseSqlite(builder.Configuration.GetConnectionString("Default")));
+                        options.UseSqlite(builder.Configuration.GetConnectionString("Default") ?? "Data Source=database.db"));
 
                 builder.Services.AddScoped<IDataService, DataService>();
 
-                builder.Services.AddScoped<IThreadingService, ThreadingService>();
+                builder.Services.AddSingleton<IThreadingService, ThreadingService>();
 
-                var app = builder.Build();
+                var app = builder.Build();             
 
                 // Configure the HTTP request pipeline.
                 if (!app.Environment.IsDevelopment())

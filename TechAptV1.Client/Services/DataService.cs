@@ -17,11 +17,11 @@ namespace TechAptV1.Client.Services;
 /// </remarks>
 /// <param name="logger"></param>
 /// <param name="configuration"></param>
-public sealed class DataService(ILogger<DataService> logger, IConfiguration configuration) : IDataService
+public sealed class DataService(ILogger<DataService> logger, IConfiguration configuration, DataContext dataContext) : IDataService
 {
     private readonly ILogger<DataService> _logger = logger;
     private readonly IConfiguration _configuration = configuration;
-    public DataContext DataContext { get; private set; }
+    public DataContext DataContext { get; } = dataContext;
 
     /// <summary>
     /// Save the list of data to the SQLite Database
