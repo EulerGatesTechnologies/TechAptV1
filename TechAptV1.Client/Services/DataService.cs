@@ -22,7 +22,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
     private readonly ILogger<DataService> _logger = logger;
     private readonly IConfiguration _configuration = configuration;
     public DataContext DataContext { get; } = dataContext;
-
+ 
     /// <summary>
     /// Save the list of data to the SQLite Database
     /// </summary>
