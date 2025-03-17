@@ -31,7 +31,7 @@ namespace TechAptV1.Client
 
                 builder.Services.AddScoped<IDataService, DataService>();
 
-                builder.Services.AddSingleton<IThreadingService, ThreadingService>();
+                builder.Services.AddScoped<IThreadingService, ThreadingService>();
 
                 var app = builder.Build();             
 
