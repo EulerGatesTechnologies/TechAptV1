@@ -49,7 +49,7 @@
     /// </summary>
     private async Task DownloadXmlAsync()
     {
-        this.Logger.LogInformation("DownloadXml");
+        this.Logger.LogInformation(nameof(DownloadXmlAsync));
 
         string xml = await DataService.SerializeToXmlAsync();
 
@@ -61,8 +61,11 @@
     /// </summary>
     private async Task DownloadBinaryAsync()
     {
-        this.Logger.LogInformation("DownloadBinary");
-        throw new NotImplementedException();
-    }
+        this.Logger.LogInformation(nameof(DownloadBinaryAsync)); 
+        
+        var binary = await DataService.SerializeToBinaryAsync();
 
+        await JS.InvokeVoidAsync("downloadFile", "numbers.bin", Convert.ToBase64String(binary), "application/octet-stream");
+   
+    }
 }

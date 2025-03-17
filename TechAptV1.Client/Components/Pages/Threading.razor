@@ -53,12 +53,11 @@ else
 
         try
         {
-            await ThreadingService.StartAsync();
-
-            var threadingService = ThreadingService as ThreadingService;
-
-            if (threadingService != null)
+           
+            if (ThreadingService is ThreadingService threadingService)
             {
+                await ThreadingService.StartAsync();
+
                 Result = 
                 (
                     threadingService.GetNumbers(),
@@ -90,11 +89,18 @@ else
     private async Task SaveAsync()
     {
         this.Logger.LogInformation(nameof(SaveAsync));
-        
-        await (ThreadingService as ThreadingService).SaveAsync();
-        
-        await JS.InvokeVoidAsync("alert", "Data saved successfully.");
 
+        if (ThreadingService is ThreadingService threadingService)
+        {
+            await threadingService.SaveAsync();
+
+            await JS.InvokeVoidAsync("alert", "Data saved successfully.");
+        }
+        else
+        {
+            this.Logger.LogWarning("ThreadingService is not of type ThreadingService");
+        }
     }
+
 
 }

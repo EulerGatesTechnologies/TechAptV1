@@ -2,7 +2,9 @@ using Moq;
 using Xunit;
 using Shouldly;
 
-namespace TechAptV1.Client;
+using TechAptV1.Client.Services;
+
+namespace TechAptV1.UnitTests.TechAptV1.Client.Services;
 
 public class ThreadingServiceTests
 {

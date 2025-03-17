@@ -38,7 +38,6 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
     {
         logger.LogInformation(nameof(SaveAsync));
 
-        // Implement the save logic here
         await dataService.SaveAsync(_numbers);
     }
 
@@ -48,9 +47,7 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
     public async Task StartAsync()
     {
         logger.LogInformation(nameof(StartAsync));
-
-        // Implement the threading logic here
-        _numbers = new ();
+        
         Random random = new ();
         List<Task> tasks = new ();
 
@@ -128,6 +125,7 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
 
         _primeNumbers = _numbers.Count(n => n.IsPrime == 1); // Assumes prime checks have been done & stored in the numbers list.
     }
+
     private static int GeneratePrime(Random random)
         {
             int candidate = random.Next(2, 1000000);
@@ -138,7 +136,7 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
             return candidate;
         }
 
-        private static bool IsPrime(int number)
+    private static bool IsPrime(int number)
         {
             if (number <= 1) return false;
             if (number == 2) return true;
@@ -156,4 +154,6 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
 public interface IThreadingService
 {
     Task StartAsync();
+
+    Task SaveAsync();
 }

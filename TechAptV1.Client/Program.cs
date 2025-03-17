@@ -5,6 +5,7 @@ using TechAptV1.Client.Components;
 
 using Microsoft.EntityFrameworkCore;
 using TechAptV1.Client.Services;
+using TechAptV1.Client.Data;
 
 namespace TechAptV1.Client
 {

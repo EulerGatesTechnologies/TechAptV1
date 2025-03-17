@@ -3,32 +3,25 @@
 using TechAptV1.Client.Models;
 
 using Microsoft.EntityFrameworkCore;
-using System.IO;
-using System.Text;
 using System.Xml.Serialization;
+using TechAptV1.Client.Data;
+using System.Text;
 
 namespace TechAptV1.Client.Services;
 
 /// <summary>
 /// Data Access Service for interfacing with the SQLite Database
 /// </summary>
-public sealed class DataService : IDataService
+/// <remarks>
+/// Default constructor providing DI Logger and Configuration
+/// </remarks>
+/// <param name="logger"></param>
+/// <param name="configuration"></param>
+public sealed class DataService(ILogger<DataService> logger, IConfiguration configuration) : IDataService
 {
-    private readonly ILogger<DataService> _logger;
-    private readonly IConfiguration _configuration;
-    private readonly DataContext _context;
-
-    /// <summary>
-    /// Default constructor providing DI Logger and Configuration
-    /// </summary>
-    /// <param name="logger"></param>
-    /// <param name="configuration"></param>
-    public DataService(ILogger<DataService> logger, IConfiguration configuration, DataContext context)
-    {
-        _logger = logger;
-        _configuration = configuration;
-        _context = context;
-    }
+    private readonly ILogger<DataService> _logger = logger;
+    private readonly IConfiguration _configuration = configuration;
+    public DataContext DataContext { get; private set; }
 
     /// <summary>
     /// Save the list of data to the SQLite Database
@@ -38,9 +31,9 @@ public sealed class DataService : IDataService
     {
         _logger.LogInformation(nameof(SaveAsync));
 
-        await _context.AddRangeAsync(numbersList);
+        await DataContext.AddRangeAsync(numbersList);
 
-        await _context.SaveChangesAsync();
+        await DataContext.SaveChangesAsync();
     }
 
     /// <summary>
@@ -52,8 +45,7 @@ public sealed class DataService : IDataService
     {
         _logger.LogInformation(nameof(GetAsync));
 
-        return await _context
-            .Numbers
+        return await DataContext.Numbers
             .Take(count)
             .ToListAsync();
     }
@@ -66,14 +58,14 @@ public sealed class DataService : IDataService
     {
         _logger.LogInformation(nameof(GetAllAsync));
 
-        return await _context.Numbers.ToListAsync();
+        return await DataContext.Numbers.ToListAsync();
     }
 
     public async Task<string> SerializeToXmlAsync()
     {
         _logger.LogInformation(nameof(SerializeToXmlAsync));
 
-        var numbers = await _context.Numbers.ToListAsync();
+        var numbers = await DataContext.Numbers.ToListAsync();
 
         var xmlSerializer = new XmlSerializer(typeof(List<Number>));
 
@@ -83,11 +75,33 @@ public sealed class DataService : IDataService
 
         return stringWriter.ToString();
     }
+
+    public async Task<byte[]> SerializeToBinaryAsync()
+    {
+        _logger.LogInformation(nameof(SerializeToBinaryAsync));
+
+        var numbers = await DataContext.Numbers.ToListAsync();
+
+        using var stream = new MemoryStream();
+
+        using var writer = new BinaryWriter(stream, Encoding.UTF8, true);
+
+        foreach (var number in numbers)
+        {
+            writer.Write(number.Value);
+
+            writer.Write(number.IsPrime);
+        }
+        
+        return stream.ToArray();
+    }
 }
 
 public interface IDataService
 {
     Task<string> SerializeToXmlAsync();
+
+    Task<byte[]> SerializeToBinaryAsync();
 
     Task<IEnumerable<Number>> GetAsync(int count);
 

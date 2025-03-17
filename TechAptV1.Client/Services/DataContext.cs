@@ -2,7 +2,7 @@
 using Microsoft.EntityFrameworkCore;
 using TechAptV1.Client.Models;
 
-namespace TechAptV1.Client.Services;
+namespace TechAptV1.Client.Data;
 
 public class DataContext : DbContext
 {
