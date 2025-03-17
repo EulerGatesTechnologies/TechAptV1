@@ -10,7 +10,7 @@ public class ThreadingServiceTests
 {
     private readonly Mock<ILogger<ThreadingService>> _loggerMock;
     private readonly Mock<IDataService> _dataServiceMock;
-    private IThreadingService _threadingService;
+    private ThreadingService _threadingService;
 
     public ThreadingServiceTests()
     {
