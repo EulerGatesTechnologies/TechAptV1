@@ -52,6 +52,25 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
 
         _numbers = new ();
 
+        var random = new Random();
+
+        var tasks = new List<Task>();
+
+        // Thread 1:  Generate Odd Numbers
+        tasks.Add(Task.Run(() =>
+        {
+            while (_numbers.Count < MaxEntries)
+            {
+                lock (_lock)
+                {
+                    var oddNumber = random.Next(1, 1000000) * 2 + 1; // odd = 2n+1, n in Integers
+
+                    _numbers.Add(new Number { Value = oddNumber });
+                }
+            }
+        }));
+
+
         _totalNumbers = _numbers.Count;
 
         _oddNumbers = _numbers.Count(n => n.Value % 2 != 0 && n.Value > 0);

@@ -17,7 +17,7 @@ public class ThreadingServiceTests
     public ThreadingServiceTests()
     {
         _loggerMock = new Mock<ILogger<ThreadingService>>();
-        _dataServiceMock = new Mock<IDataService>();        
+        _dataServiceMock = new Mock<IDataService>();
     }
 
     [Fact]
@@ -25,11 +25,11 @@ public class ThreadingServiceTests
     {
         // Arrange
         int expectedToBeZero = 0;
-        
+
         _dataServiceMock
             .Setup(x => x.GetAllAsync())
             .ReturnsAsync(new List<Number>());
-        
+
         _threadingService = new ThreadingService(_loggerMock.Object, _dataServiceMock.Object);
 
         // Act
@@ -48,16 +48,18 @@ public class ThreadingServiceTests
     [Fact]
     public async Task StartAsync_WhenNumbersAreProvided_ThenShouldProduceExactly10mSortedNumbers()
     {
-        // Arrange        
+        // Arrange
         int expectedToBe10m = 10_000_000;
+
+         _threadingService = new ThreadingService(_loggerMock.Object, _dataServiceMock.Object);
 
         // Act
          await _threadingService.StartAsync();
         var globalNumbers = _threadingService.GetNumbers();
 
-        // Assert        
+        // Assert
         globalNumbers.ShouldNotBeEmpty();
-        globalNumbers.Count.ShouldBe(expectedToBe10m); 
+        globalNumbers.Count.ShouldBe(expectedToBe10m);
         _threadingService.GetTotalNumbers().ShouldBe(expectedToBe10m);
         // Ensure list is sorted
         for (int i = 1; i < globalNumbers.Count; i++)
