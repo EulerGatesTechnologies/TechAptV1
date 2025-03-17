@@ -10,14 +10,14 @@ public class ThreadingServiceTests
 {
     private readonly Mock<ILogger<ThreadingService>> _loggerMock;
     private readonly Mock<IDataService> _dataServiceMock;
-    private ThreadingService _threadingService;
+    private IThreadingService _threadingService;
 
     public ThreadingServiceTests()
     {
         _loggerMock = new Mock<ILogger<ThreadingService>>();
 
         _dataServiceMock = new Mock<IDataService>();
-        
+
          _threadingService = new ThreadingService(_loggerMock.Object, _dataServiceMock.Object);
     }
 
@@ -41,5 +41,5 @@ public class ThreadingServiceTests
         _threadingService.GetTotalNumbers().ShouldBe(expectedToBe10m);        
 
         (_threadingService.GetEvenNumbers() + _threadingService.GetOddNumbers()).ShouldBe(expectedToBe10m);
-    }
+    } 
 }
