@@ -70,6 +70,49 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
             }
         }));
 
+        // Thread 2: Generate negative prime numbers.
+        tasks.Add(Task.Run(() =>
+        {
+            while (_numbers.Count < MaxEntries)
+            {
+                lock (_lock)
+                {
+                    int negativePrimeNumber = GeneratePrime(random) * -1;
+                 
+                    _numbers.Add(new Number { Value = negativePrimeNumber, IsPrime = 1 });                    
+                }
+            }
+        }));
+
+        // Thread 3: When Threadshold is reached, generate Even numbers.
+        tasks.Add(Task.Run(() =>
+        {
+            while (_numbers.Count < ThresholdForEven)
+            {
+                //Wait for the threshold to be reached
+                Thread.Sleep(100);
+            }
+     
+            while (_numbers.Count < MaxEntries)
+            {
+                lock (_lock)
+                {
+                    var evenNumber = random.Next(1, 1000000) * 2; // even = 2n, n in Integers
+
+                    _numbers.Add(new Number { Value = evenNumber });
+                }
+            }
+        }));
+
+        // Wait for all threads to complete
+        await Task.WhenAny(Task.WhenAll(tasks), Task.Delay(Timeout.Infinite));
+
+        // Sort the numbers
+        lock (_lock)
+        {
+            _numbers.Sort((a, b) => a.Value.CompareTo(b.Value));
+        }
+        
 
         _totalNumbers = _numbers.Count;
 
@@ -79,6 +122,29 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
 
         _primeNumbers = _numbers.Count(n => n.IsPrime == 1); // Assumes prime checks have been done & stored in the numbers list.
     }
+    private static int GeneratePrime(Random random)
+        {
+            int candidate = random.Next(2, 1000000);
+            while (!IsPrime(candidate))
+            {
+                candidate = random.Next(2, 1000000);
+            }
+            return candidate;
+        }
+
+        private static bool IsPrime(int number)
+        {
+            if (number <= 1) return false;
+            if (number == 2) return true;
+            if (number % 2 == 0) return false;
+
+            var boundary = (int)Math.Floor(Math.Sqrt(number));
+            for (int i = 3; i <= boundary; i += 2)
+            {
+                if (number % i == 0) return false;
+            }
+            return true;
+        }
 }
 
 public interface IThreadingService
