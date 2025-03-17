@@ -31,6 +31,13 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
     {
         _logger.LogInformation(nameof(SaveAsync));
 
+        if (numbersList == null)
+        {
+            _logger.LogError(nameof(numbersList));
+            
+            throw new ArgumentNullException(nameof(numbersList));
+        }
+
         await DataContext.AddRangeAsync(numbersList);
 
         await DataContext.SaveChangesAsync();

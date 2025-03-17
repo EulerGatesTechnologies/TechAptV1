@@ -57,6 +57,13 @@ public class DataServiceTests
         retrieved.ShouldContain(numbers[0]);
         retrieved.ShouldContain(numbers[1]);
         retrieved.ShouldContain(numbers[2]);
-    }    
+    }
+
+    [Fact]
+    public async Task SaveAsync_WhenNumbersAreNull_ThenShouldThrowAnArgumentNullException()
+    {
+        // Act & Assert
+        await Should.ThrowAsync<ArgumentNullException>(() => _dataService.SaveAsync(null));
+    }
 }
 
