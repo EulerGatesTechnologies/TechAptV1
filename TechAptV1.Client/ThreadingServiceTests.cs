@@ -15,7 +15,9 @@ public class ThreadingServiceTests
     public ThreadingServiceTests()
     {
         _loggerMock = new Mock<ILogger<ThreadingService>>();
+
         _dataServiceMock = new Mock<IDataService>();
+        
          _threadingService = new ThreadingService(_loggerMock.Object, _dataServiceMock.Object);
     }
 
