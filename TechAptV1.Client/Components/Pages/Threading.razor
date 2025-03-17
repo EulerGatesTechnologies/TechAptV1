@@ -89,8 +89,12 @@ else
 
     private async Task SaveAsync()
     {
-        this.Logger.LogInformation("Save");
-        throw new NotImplementedException();
+        this.Logger.LogInformation(nameof(SaveAsync));
+        
+        await (ThreadingService as ThreadingService).SaveAsync();
+        
+        await JS.InvokeVoidAsync("alert", "Data saved successfully.");
+
     }
 
 }

@@ -34,11 +34,11 @@ public sealed class DataService : IDataService
     /// Save the list of data to the SQLite Database
     /// </summary>
     /// <param name="dataList"></param>
-    public async Task Save(List<Number> dataList)
+    public async Task SaveAsync(List<Number> numbersList)
     {
-        _logger.LogInformation(nameof(Save));
+        _logger.LogInformation(nameof(SaveAsync));
 
-        await _context.AddRangeAsync(dataList);
+        await _context.AddRangeAsync(numbersList);
 
         await _context.SaveChangesAsync();
     }
@@ -92,4 +92,6 @@ public interface IDataService
     Task<IEnumerable<Number>> GetAsync(int count);
 
     Task<IEnumerable<Number>> GetAllAsync();
+
+    Task SaveAsync(List<Number> numbersList);
 }

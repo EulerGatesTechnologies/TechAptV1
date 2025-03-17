@@ -34,11 +34,12 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
     /// <summary>
     /// Persist the results to the SQLite database
     /// </summary>
-    public async Task Save()
+    public async Task SaveAsync()
     {
-        logger.LogInformation("Save");
+        logger.LogInformation(nameof(SaveAsync));
+
         // Implement the save logic here
-        throw new NotImplementedException();
+        await dataService.SaveAsync(_numbers);
     }
 
     /// <summary>
@@ -49,12 +50,9 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
         logger.LogInformation(nameof(StartAsync));
 
         // Implement the threading logic here
-
         _numbers = new ();
-
-        var random = new Random();
-
-        var tasks = new List<Task>();
+        Random random = new ();
+        List<Task> tasks = new ();
 
         // Thread 1:  Generate Odd Numbers
         tasks.Add(Task.Run(() =>
@@ -67,8 +65,7 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
                     {
                         var oddNumber = random.Next(1, 1000000) * 2 + 1; // odd = 2n+1, n in Integers
 
-                        _numbers.Add(new Number { Value = oddNumber });
-                
+                        _numbers.Add(new Number { Value = oddNumber });                
                     }
                 }
             }
@@ -125,9 +122,9 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
 
         _totalNumbers = _numbers.Count;
 
-        _oddNumbers = _numbers.Count(n => n.Value % 2 != 0 && n.Value > 0);
+        _oddNumbers = _numbers.Count(n => n.IsPrime == 0 && n.Value % 2 != 0 && n.Value > 0);
 
-        _evenNumbers = _numbers.Count(n => n.Value % 2 == 0 && n.Value > 0);
+        _evenNumbers = _numbers.Count(n => n.IsPrime == 0 && n.Value % 2 == 0 && n.Value > 0);
 
         _primeNumbers = _numbers.Count(n => n.IsPrime == 1); // Assumes prime checks have been done & stored in the numbers list.
     }

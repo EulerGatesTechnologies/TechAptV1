@@ -2,7 +2,8 @@ using Moq;
 using Xunit;
 using Shouldly;
 
-namespace TechAptV1.Client.Services;
+namespace TechAptV1.Client;
+
 public class ThreadingServiceTests
 {
     private readonly Mock<ILogger<ThreadingService>> _loggerMock;
