@@ -9,33 +9,38 @@
 
 <h3>Threading &amp; Data Persistence</h3>
 
+<div>
+    <button class="btn btn-primary" @onclick="(async () => await this.StartAsync())" disabled="@IsComputing">Start</button>
+    <button class="btn btn-primary" @onclick="(async () => await this.SaveAsync())" disabled="@(!IsDataAvailable)">Save</button>
+</div>
+
 @if (IsComputing)
 {
     <p>Computing... Please wait.</p>
 }
-
-
-<div>
-    <button class="btn btn-primary" @onclick="(async () => await this.StartAsync())" disabled="@IsComputing">Start</button>
-    <button class="btn btn-primary" @onclick="(async () => await this.SaveAsync())">Save</button>
-</div>
-<div>
-    <hr>
-    <h4>Numbers:</h4>
-    <ul>
-        <li>Odd:    <strong>@(this.Result?.OddNumbersCount      ??  0)</strong></li>
-        <li>Even:   <strong>@(this.Result?.EvenNumbersCount     ??  0)</strong></li>
-        <li>Prime:  <strong>@(this.Result?.PrimeNumbersCount    ??  0)</strong></li>
-        <li>Total:  <strong>@(this.Result?.TotalNumbersCount    ??  0)</strong></li>
-    </ul>
-    <hr>
-</div>
+else
+{
+    <div>
+        <hr>
+        <h4>Numbers:</h4>
+        <ul>
+            <li>Odd:    <strong>@(this.Result?.OddNumbersCount      ??  0)</strong></li>
+            <li>Even:   <strong>@(this.Result?.EvenNumbersCount     ??  0)</strong></li>
+            <li>Prime:  <strong>@(this.Result?.PrimeNumbersCount    ??  0)</strong></li>
+            <li>Total:  <strong>@(this.Result?.TotalNumbersCount    ??  0)</strong></li>
+        </ul>
+        <hr>
+    </div>
+}
 
 @code {
 
     [Inject] public required ILogger<Threading> Logger { get; set; }
 
     private bool IsComputing { get; set; } = false;
+
+    private bool IsDataAvailable { get; set; } = false;
+
     private (List<Number> Numbers, int TotalNumbersCount, int OddNumbersCount, int EvenNumbersCount, int PrimeNumbersCount)? Result { get; set;}
 
     private async Task StartAsync()
@@ -44,9 +49,31 @@
 
         IsComputing = true;
 
+        IsDataAvailable = false;
+
         try
         {
             await ThreadingService.StartAsync();
+
+            var threadingService = ThreadingService as ThreadingService;
+
+            if (threadingService != null)
+            {
+                Result = 
+                (
+                    threadingService.GetNumbers(),
+                    threadingService.GetTotalNumbers(),
+                    threadingService.GetOddNumbers(),
+                    threadingService.GetEvenNumbers(),
+                    threadingService.GetPrimeNumbers()
+                );
+
+                IsDataAvailable = true;
+            }
+            else
+            {
+                Result = null;
+            }
         }
         catch (OperationCanceledException)
         {
