@@ -63,9 +63,13 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
             {
                 lock (_lock)
                 {
-                    var oddNumber = random.Next(1, 1000000) * 2 + 1; // odd = 2n+1, n in Integers
+                    if(_numbers.Count < MaxEntries)
+                    {
+                        var oddNumber = random.Next(1, 1000000) * 2 + 1; // odd = 2n+1, n in Integers
 
-                    _numbers.Add(new Number { Value = oddNumber });
+                        _numbers.Add(new Number { Value = oddNumber });
+                
+                    }
                 }
             }
         }));
@@ -77,9 +81,12 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
             {
                 lock (_lock)
                 {
-                    int negativePrimeNumber = GeneratePrime(random) * -1;
-                 
-                    _numbers.Add(new Number { Value = negativePrimeNumber, IsPrime = 1 });                    
+                    if (_numbers.Count < MaxEntries)
+                    {
+                        int negativePrimeNumber = GeneratePrime(random) * -1;
+                    
+                        _numbers.Add(new Number { Value = negativePrimeNumber, IsPrime = 1 });                    
+                    }
                 }
             }
         }));
@@ -97,9 +104,12 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
             {
                 lock (_lock)
                 {
-                    var evenNumber = random.Next(1, 1000000) * 2; // even = 2n, n in Integers
+                    if(_numbers.Count < MaxEntries)
+                    {   
+                        var evenNumber = random.Next(1, 1000000) * 2; // even = 2n, n in Integers
 
-                    _numbers.Add(new Number { Value = evenNumber });
+                        _numbers.Add(new Number { Value = evenNumber });
+                    }
                 }
             }
         }));
@@ -111,8 +121,7 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
         lock (_lock)
         {
             _numbers.Sort((a, b) => a.Value.CompareTo(b.Value));
-        }
-        
+        }        
 
         _totalNumbers = _numbers.Count;
 
