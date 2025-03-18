@@ -7,31 +7,39 @@
 @inject IJSRuntime JS
 
 <h3>Results</h3>
-<p>The table shows the top N numbers generated. The download XML and Binary feature allows you to download the entire data set</p>
 
-<div>
-    <button class="btn btn-primary" @onclick="(async () => await this.DownloadXmlAsync())">Download XML</button>
-    <button class="btn btn-primary" @onclick="(async () => await this.DownloadBinaryAsync())">Download Binary</button>
-</div>
-<div>
-    <table class="table">
-        <thead>
-        <tr>
-            <th>Value</th>
-            <th>IsPrime</th>
-        </tr>
-        </thead>
-        <tbody>
-        @foreach (var item in this.Numbers)
-        {
+@if(this.Numbers != null && Numbers.Any())
+{
+    <p>The table shows the top N numbers generated. The download XML and Binary feature allows you to download the entire data set</p>
+
+    <div>
+        <button class="btn btn-primary" @onclick="(async () => await this.DownloadXmlAsync())">Download XML</button>
+        <button class="btn btn-primary" @onclick="(async () => await this.DownloadBinaryAsync())">Download Binary</button>
+    </div>
+    <div>
+        <table class="table">
+            <thead>
             <tr>
-                <td>@item.Value</td>
-                <td>@item.IsPrime</td>
+                <th>Value</th>
+                <th>IsPrime</th>
             </tr>
-        }
-        </tbody>
-    </table>
-</div>
+            </thead>
+            <tbody>
+            @foreach (var item in this.Numbers)
+            {
+                <tr>
+                    <td>@item.Value</td>
+                    <td>@item.IsPrime</td>
+                </tr>
+            }
+            </tbody>
+        </table>
+    </div>
+}
+else
+{
+    <p>No data available</p>
+}
 
 @code {
 
@@ -61,11 +69,11 @@
     /// </summary>
     private async Task DownloadBinaryAsync()
     {
-        this.Logger.LogInformation(nameof(DownloadBinaryAsync)); 
-        
+        this.Logger.LogInformation(nameof(DownloadBinaryAsync));
+
         var binary = await DataService.SerializeToBinaryAsync();
 
         await JS.InvokeVoidAsync("downloadFile", "numbers.bin", Convert.ToBase64String(binary), "application/octet-stream");
-   
+
     }
 }

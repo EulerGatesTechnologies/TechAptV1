@@ -10,11 +10,11 @@
 <h3>Threading &amp; Data Persistence</h3>
 
 <div>
-    <button class="btn btn-primary" @onclick="(async () => await this.StartAsync())" disabled="@IsComputing">Start</button>
+    <button class="btn btn-primary" @onclick="(async () => await this.StartAsync())" disabled="@isComputing">Start</button>
     <button class="btn btn-primary" @onclick="(async () => await this.SaveAsync())" disabled="@(!IsDataAvailable)">Save</button>
 </div>
 
-@if (IsComputing)
+@if (isComputing)
 {
     <p>Computing... Please wait.</p>
 }
@@ -37,9 +37,9 @@ else
 
     [Inject] public required ILogger<Threading> Logger { get; set; }
 
-    private bool IsComputing { get; set; } = false;
+    private bool isComputing = false;
 
-    private bool IsDataAvailable { get; set; } = false;
+    private bool IsDataAvailable => (Result != null) && (!isComputing); // Assert we are ready with data to be saved
 
     private (List<Number> Numbers, int TotalNumbersCount, int OddNumbersCount, int EvenNumbersCount, int PrimeNumbersCount)? Result { get; set;}
 
@@ -47,18 +47,16 @@ else
     {
         this.Logger.LogInformation(nameof(StartAsync));
 
-        IsComputing = true;
-
-        IsDataAvailable = false;
+        isComputing = true;
 
         try
         {
-           
+
             if (ThreadingService is ThreadingService threadingService)
             {
                 await ThreadingService.StartAsync();
 
-                Result = 
+                Result =
                 (
                     threadingService.GetNumbers(),
                     threadingService.GetTotalNumbers(),
@@ -66,21 +64,21 @@ else
                     threadingService.GetEvenNumbers(),
                     threadingService.GetPrimeNumbers()
                 );
-
-                IsDataAvailable = true;
             }
             else
             {
                 Result = null;
             }
         }
-        catch (Exception)
+        catch (Exception exception)
         {
+            this.Logger.LogError(exception, nameof(exception));
+
             Result = null;
         }
         finally
         {
-            IsComputing = false;
+            isComputing = false;
 
             StateHasChanged();
         }
@@ -90,15 +88,33 @@ else
     {
         this.Logger.LogInformation(nameof(SaveAsync));
 
-        if (ThreadingService is ThreadingService threadingService)
+        if(Result != null)
         {
-            await threadingService.SaveAsync();
+            isComputing = true;
 
-            await JS.InvokeVoidAsync("alert", "Data saved successfully.");
-        }
-        else
-        {
-            this.Logger.LogWarning("ThreadingService is not of type ThreadingService");
+            try
+            {
+                if (ThreadingService is ThreadingService threadingService)
+                {
+                    await threadingService.SaveAsync();
+
+                    this.Logger.LogInformation("Data saved successfully.");
+
+                    await JS.InvokeVoidAsync("alert", "Data saved successfully.");
+                }
+                else
+                {
+                    this.Logger.LogWarning("ThreadingService is not of type IThreadingService");
+
+                    await JS.InvokeVoidAsync("alert", "ThreadingService is not of type IThreadingService.");
+                }
+            }
+            finally
+            {
+                isComputing = false;
+
+                StateHasChanged();
+            }
         }
     }
 }
