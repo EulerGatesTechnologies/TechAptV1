@@ -4,7 +4,7 @@
 @using TechAptV1.Client.Models;
 
 @inject IThreadingService ThreadingService
-@inj
+
 
 @inject IJSRuntime JS
 
@@ -40,7 +40,7 @@ else
 
     private bool isComputing = false;
 
-    private bool IsDataAvailable => !isComputing; // Assert we are ready with data to be saved
+    private bool IsDataAvailable => (Result != null) && (!isComputing); // Assert we are ready with data to be saved
 
     private (List<Number> Numbers, int TotalNumbersCount, int OddNumbersCount, int EvenNumbersCount, int PrimeNumbersCount)? Result { get; set;}
 
