@@ -4,7 +4,7 @@
 @using TechAptV1.Client.Models;
 
 @inject IThreadingService ThreadingService
-@inject IDataService DataService
+
 @inject IJSRuntime JS
 
 <h3>Threading &amp; Data Persistence</h3>
@@ -16,7 +16,7 @@
 
 @if (isComputing)
 {
-    <p>Computing... Please wait.</p>
+    <p>Computing... Please wait...</p>
 }
 else
 {
@@ -39,7 +39,7 @@ else
 
     private bool isComputing = false;
 
-    private bool IsDataAvailable => (Result != null) && (!isComputing); // Assert we are ready with data to be saved
+    private bool IsDataAvailable => !isComputing; // Assert we are ready with data to be saved
 
     private (List<Number> Numbers, int TotalNumbersCount, int OddNumbersCount, int EvenNumbersCount, int PrimeNumbersCount)? Result { get; set;}
 
@@ -54,6 +54,8 @@ else
 
             if (ThreadingService is ThreadingService threadingService)
             {
+                this.Logger.LogInformation($"Starting {nameof(ThreadingService)}...");
+
                 await ThreadingService.StartAsync();
 
                 Result =
@@ -64,6 +66,8 @@ else
                     threadingService.GetEvenNumbers(),
                     threadingService.GetPrimeNumbers()
                 );
+
+                this.Logger.LogInformation("Data computed successfully...");
             }
             else
             {
@@ -88,17 +92,19 @@ else
     {
         this.Logger.LogInformation(nameof(SaveAsync));
 
+        isComputing = true;
+
         if(Result != null)
         {
-            isComputing = true;
-
             try
             {
                 if (ThreadingService is ThreadingService threadingService)
                 {
+                    this.Logger.LogInformation($"Saving {nameof(ThreadingService)}...");
+
                     await threadingService.SaveAsync();
 
-                    this.Logger.LogInformation("Data saved successfully.");
+                    this.Logger.LogInformation("Data saved successfully....");
 
                     await JS.InvokeVoidAsync("alert", "Data saved successfully.");
                 }

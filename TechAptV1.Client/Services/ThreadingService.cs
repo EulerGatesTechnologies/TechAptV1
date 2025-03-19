@@ -15,8 +15,9 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
 : IThreadingService
 {
     private readonly object _lock = new(); // This will be used for Thead-Safety lock on shared global variable.
-    private const int MaxEntries = 10_000_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
-    private const int ThresholdForEven = 2_500_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
+    private const int MaxEntries = 10_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
+    private const int ThresholdForEven = 2_500; // TODO: We would like to have this read from the config file, rather then hardcoded.
+    private ConcurrentBag<int> globalList = new ConcurrentBag<int>();
 
     private int _oddNumbers = 0;
     public int GetOddNumbers() => _oddNumbers;
@@ -33,14 +34,14 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
     private List<Number> _numbers = new();
     public List<Number> GetNumbers() => _numbers;
 
-    private ConcurrentBag<int> globalList = new ConcurrentBag<int>();
-
     /// <summary>
     /// Persist the results to the SQLite database
     /// </summary>
     public async Task SaveAsync()
     {
         logger.LogInformation(nameof(SaveAsync));
+
+
 
         await dataService.SaveAsync(_numbers);
     }
@@ -51,7 +52,7 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
     public async Task StartAsync()
     {
         logger.LogInformation(nameof(StartAsync));
-        
+
         Random random = new ();
         List<Task> tasks = new ();
 
@@ -66,7 +67,7 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
                     {
                         var oddNumber = random.Next(1, 1000000) * 2 + 1; // odd = 2n+1, n in Integers
 
-                        _numbers.Add(new Number { Value = oddNumber });                
+                        _numbers.Add(new Number { Value = oddNumber });
                     }
                 }
             }
@@ -82,8 +83,8 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
                     if (_numbers.Count < MaxEntries)
                     {
                         int negativePrimeNumber = GeneratePrime(random) * -1;
-                    
-                        _numbers.Add(new Number { Value = negativePrimeNumber, IsPrime = 1 });                    
+
+                        _numbers.Add(new Number { Value = negativePrimeNumber, IsPrime = 1 });
                     }
                 }
             }
@@ -97,13 +98,13 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
                 //Wait for the threshold to be reached
                 Thread.Sleep(100);
             }
-     
+
             while (_numbers.Count < MaxEntries)
             {
                 lock (_lock)
                 {
                     if(_numbers.Count < MaxEntries)
-                    {   
+                    {
                         var evenNumber = random.Next(1, 1000000) * 2; // even = 2n, n in Integers
 
                         _numbers.Add(new Number { Value = evenNumber });
@@ -119,7 +120,7 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
         lock (_lock)
         {
             _numbers.Sort((a, b) => a.Value.CompareTo(b.Value));
-        }        
+        }
 
         _totalNumbers = _numbers.Count;
 
