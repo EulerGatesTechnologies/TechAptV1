@@ -4,6 +4,7 @@
 @using TechAptV1.Client.Models;
 
 @inject IThreadingService ThreadingService
+@inj
 
 @inject IJSRuntime JS
 
@@ -49,6 +50,8 @@ else
 
         isComputing = true;
 
+        StateHasChanged();
+
         try
         {
 
@@ -91,8 +94,6 @@ else
     private async Task SaveAsync()
     {
         this.Logger.LogInformation(nameof(SaveAsync));
-
-        isComputing = true;
 
         if(Result != null)
         {

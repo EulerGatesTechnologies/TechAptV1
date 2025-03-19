@@ -15,8 +15,8 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
 : IThreadingService
 {
     private readonly object _lock = new(); // This will be used for Thead-Safety lock on shared global variable.
-    private const int MaxEntries = 10_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
-    private const int ThresholdForEven = 2_500; // TODO: We would like to have this read from the config file, rather then hardcoded.
+    private const int MAX_ENTRIES = 10_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
+    private const int EVEN_THREAD_TRIGGER_THRESHOLD = 2_500; // TODO: We would like to have this read from the config file, rather then hardcoded.
     private ConcurrentBag<int> globalList = new ConcurrentBag<int>();
 
     private int _oddNumbers = 0;
@@ -57,15 +57,15 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
         // Thread 1:  Generate Odd Numbers
         tasks.Add(Task.Run(() =>
         {
-            while (_numbers.Count < MaxEntries)
+            while (_numbers.Count < MAX_ENTRIES)
             {
                 lock (_lock)
                 {
-                    if(_numbers.Count < MaxEntries)
+                    if(_numbers.Count < MAX_ENTRIES)
                     {
                         var oddNumber = random.Next(1, 1000000) * 2 + 1; // odd = 2n+1, n in Integers
 
-                        _numbers.Add(new Number { Value = oddNumber });
+                        _numbers.Add(new Number { Value = oddNumber, IsPrime = false });
                     }
                 }
             }
@@ -74,15 +74,15 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
         // Thread 2: Generate negative prime numbers.
         tasks.Add(Task.Run(() =>
         {
-            while (_numbers.Count < MaxEntries)
+            while (_numbers.Count < MAX_ENTRIES)
             {
                 lock (_lock)
                 {
-                    if (_numbers.Count < MaxEntries)
+                    if (_numbers.Count < MAX_ENTRIES)
                     {
                         int negativePrimeNumber = GeneratePrime(random) * -1;
 
-                        _numbers.Add(new Number { Value = negativePrimeNumber, IsPrime = 1 });
+                        _numbers.Add(new Number { Value = negativePrimeNumber, IsPrime = true });
                     }
                 }
             }
@@ -91,21 +91,21 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
         // Thread 3: When Threadshold is reached, generate Even numbers.
         tasks.Add(Task.Run(() =>
         {
-            while (_numbers.Count < ThresholdForEven)
+            while (_numbers.Count < EVEN_THREAD_TRIGGER_THRESHOLD)
             {
                 //Wait for the threshold to be reached
                 Thread.Sleep(100);
             }
 
-            while (_numbers.Count < MaxEntries)
+            while (_numbers.Count < MAX_ENTRIES)
             {
                 lock (_lock)
                 {
-                    if(_numbers.Count < MaxEntries)
+                    if(_numbers.Count < MAX_ENTRIES)
                     {
                         var evenNumber = random.Next(1, 1000000) * 2; // even = 2n, n in Integers
 
-                        _numbers.Add(new Number { Value = evenNumber });
+                        _numbers.Add(new Number { Value = evenNumber, IsPrime = false });
                     }
                 }
             }
@@ -122,11 +122,11 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
 
         _totalNumbers = _numbers.Count;
 
-        _oddNumbers = _numbers.Count(n => n.IsPrime == 0 && n.Value % 2 != 0 && n.Value > 0);
+        _oddNumbers = _numbers.Count(n => n.IsPrime == false && n.Value % 2 != 0 && n.Value > 0);
 
-        _evenNumbers = _numbers.Count(n => n.IsPrime == 0 && n.Value % 2 == 0 && n.Value > 0);
+        _evenNumbers = _numbers.Count(n => n.IsPrime == false && n.Value % 2 == 0 && n.Value > 0);
 
-        _primeNumbers = _numbers.Count(n => n.IsPrime == 1); // Assumes prime checks have been done & stored in the numbers list.
+        _primeNumbers = _numbers.Count(n => n.IsPrime == true); // Assumes prime checks have been done & stored in the numbers list.
     }
 
     private static int GeneratePrime(Random random)

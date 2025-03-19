@@ -24,50 +24,58 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
     private readonly ILogger<DataService> _logger = logger;
     private readonly IConfiguration _configuration = configuration;
     public DataContext DataContext { get; } = dataContext;
-    private const string ConnectionString = "Data Source=number.db";
+
+    private string ConnectionString => _configuration?.GetConnectionString("DefaultConnection") ?? "Data Source=database.db";
 
     /// <summary>
     /// Save the list of data to the SQLite Database
     /// </summary>
     /// <param name="dataList"></param>
-    public async Task SaveAsync(List<Number> numbersList)
+    public async Task SaveAsync(List<Number> dataList)
     {
-        _logger.LogInformation(nameof(SaveAsync));
-
-        if (numbersList == null)
+        using (var connection = new SqliteConnection(ConnectionString))
         {
-            _logger.LogError(nameof(numbersList));
+            await connection.OpenAsync();
+            // Ensure that the table exists.
+            // This is more robust & durable as we have witnessed with some tests
+            var tableCmd = connection.CreateCommand();
 
-            throw new ArgumentNullException(nameof(numbersList));
+            tableCmd.CommandText = @"
+                CREATE TABLE IF NOT EXISTS ""Number"" (
+                    ""Value"" INTEGER NOT NULL,
+                    ""IsPrime"" INTEGER NOT NULL DEFAULT 0
+                );
+            ";
+
+            tableCmd.ExecuteNonQuery();
+
+            // Begin a transaction to efficiently insert many records.
+            using (var transaction = connection.BeginTransaction())
+            {
+                var insertCmd = connection.CreateCommand();
+                insertCmd.CommandText = "INSERT INTO \"Number\" (Value, IsPrime) VALUES (@value, @isPrime)";
+
+                // Create parameters to avoid re-creating them on each insert.
+                SqliteParameter valueParam = insertCmd.CreateParameter();
+                valueParam.ParameterName = "@value";
+                insertCmd.Parameters.Add(valueParam);
+
+                SqliteParameter isPrimeParam = insertCmd.CreateParameter();
+                isPrimeParam.ParameterName = "@isPrime";
+                insertCmd.Parameters.Add(isPrimeParam);
+
+                foreach (Number number in dataList)
+                {
+                    valueParam.Value = number.Value;
+                    // Save IsPrime as 1 (true) or 0 (false).
+                    isPrimeParam.Value = number.IsPrime ? 1 : 0;
+
+                    insertCmd.ExecuteNonQuery();
+                }
+
+                await transaction.CommitAsync();
+            }
         }
-        await DataContext.Database.ExecuteSqlRawAsync("DELETE FROM Number"); // Clear existing data
-
-        await DataContext.AddRangeAsync(numbersList);
-
-        await DataContext.SaveChangesAsync();
-    }
-
-    /// <summary>
-    /// Save the list of data to the SQLite Database using raw SQL
-    /// </summary>
-    /// <param name="data"></param>
-    public async Task SaveDataAsync(List<int> data)
-    {
-        using var connection = new SqliteConnection(ConnectionString);
-        await connection.OpenAsync();
-
-        using var transaction = connection.BeginTransaction();
-        var command = connection.CreateCommand();
-        command.CommandText = "INSERT INTO Number (Value, IsPrime) VALUES (@Value, @IsPrime)";
-
-        foreach (var number in data)
-        {
-            command.Parameters.AddWithValue("@Value", number);
-            command.Parameters.AddWithValue("@IsPrime", IsPrime(number) ? 1 : 0);
-            await command.ExecuteNonQueryAsync();
-        }
-
-        await transaction.CommitAsync();
     }
 
     private bool IsPrime(int number)
@@ -92,7 +100,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
         _logger.LogInformation(nameof(GetAsync));
 
         return await DataContext.Numbers
-            .OrderBy(n => n.Value)
+            .OrderByDescending(n => n.Value)
             .Take(count)
             .ToListAsync();
     }
@@ -142,6 +150,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
 
         return stream.ToArray();
     }
+
 }
 
 public interface IDataService
@@ -154,7 +163,5 @@ public interface IDataService
 
     Task<IEnumerable<Number>> GetAllAsync();
 
-    Task SaveAsync(List<Number> numbersList);
-
-    Task SaveDataAsync(List<int> data);
+    Task SaveAsync(List<Number> List);
 }

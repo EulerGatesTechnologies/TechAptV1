@@ -44,9 +44,8 @@ public class DataServiceIntegrationTests
         {
             numbersList.Add(new Number
             {
-                Id = i + 1,
                 Value = random.Next(1, 1000000),
-                IsPrime = random.Next(0, 2)
+                IsPrime = random.Next(0, 2) == 1
             });
         }
 
@@ -61,7 +60,7 @@ public class DataServiceIntegrationTests
         // Verify that each number in the list is saved to the database
         foreach (var number in numbersList)
         {
-            savedNumbers.ShouldContain(n => n.Id == number.Id && n.Value == number.Value && n.IsPrime == number.IsPrime);
+            savedNumbers.ShouldContain(n => n.Value == number.Value && n.IsPrime == number.IsPrime);
         }
     }
 
