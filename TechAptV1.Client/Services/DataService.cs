@@ -22,7 +22,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
     private readonly ILogger<DataService> _logger = logger;
     private readonly IConfiguration _configuration = configuration;
     public DataContext DataContext { get; } = dataContext;
- 
+
     /// <summary>
     /// Save the list of data to the SQLite Database
     /// </summary>
@@ -34,7 +34,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
         if (numbersList == null)
         {
             _logger.LogError(nameof(numbersList));
-            
+
             throw new ArgumentNullException(nameof(numbersList));
         }
 
@@ -54,6 +54,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
 
         return await DataContext.Numbers
             .Take(count)
+            .OrderBy(n => n.Value)
             .ToListAsync();
     }
 
@@ -99,7 +100,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
 
             writer.Write(number.IsPrime);
         }
-        
+
         return stream.ToArray();
     }
 }
