@@ -16,7 +16,7 @@ public class DataContext : DbContext
 
         modelBuilder.Entity<Number>().Property(n => n.IsPrime).HasDefaultValue(false);
 
-        // Set Value column as Primary key and create an index
+        // Update: Set Value column as Primary key and create an index
         modelBuilder.Entity<Number>().HasKey(n => n.Value);
         modelBuilder.Entity<Number>().HasIndex(n => n.Value);
     }

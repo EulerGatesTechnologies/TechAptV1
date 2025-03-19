@@ -5,6 +5,6 @@ namespace TechAptV1.Client.Models;
 public class Number
 {
     public int Value { get; set; }
-
-    public bool IsPrime { get; set; } // Defaults to false, set to true if the number is prime. More natural to name it as bool rather than int.
+    // Update: Change this to be a boolean, as it is more natural to represent a prime number as a boolean.
+    public bool IsPrime { get; set; }
 }

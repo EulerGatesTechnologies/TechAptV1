@@ -22,10 +22,11 @@ namespace TechAptV1.Client.Services;
 public sealed class DataService(ILogger<DataService> logger, IConfiguration configuration, DataContext dataContext) : IDataService
 {
     private readonly ILogger<DataService> _logger = logger;
-    private readonly IConfiguration _configuration = configuration;
+
     public DataContext DataContext { get; } = dataContext;
 
-    private string ConnectionString => _configuration?.GetConnectionString("DefaultConnection") ?? "Data Source=database.db";
+    // Update: Use the configuration to get the connection string.
+    private string ConnectionString => configuration?.GetConnectionString("DefaultConnection") ?? "Data Source=database.db";
 
     /// <summary>
     /// Save the list of data to the SQLite Database
@@ -33,6 +34,15 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
     /// <param name="dataList"></param>
     public async Task SaveAsync(List<Number> dataList)
     {
+         _logger.LogInformation(nameof(SaveAsync));
+
+        if (dataList == null)
+        {
+            _logger.LogError(nameof(dataList));
+
+            throw new ArgumentNullException(nameof(dataList));
+        }
+        // Update: use raw SQL for inserts, batching the records to improve performance.
         using (var connection = new SqliteConnection(ConnectionString))
         {
             await connection.OpenAsync();
@@ -67,7 +77,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
                 foreach (Number number in dataList)
                 {
                     valueParam.Value = number.Value;
-                    // Save IsPrime as 1 (true) or 0 (false).
+
                     isPrimeParam.Value = number.IsPrime ? 1 : 0;
 
                     insertCmd.ExecuteNonQuery();
