@@ -6,6 +6,8 @@ using Microsoft.EntityFrameworkCore;
 using System.Xml.Serialization;
 using TechAptV1.Client.Data;
 using System.Text;
+using Microsoft.Data.Sqlite;
+using System.Threading.Tasks;
 
 namespace TechAptV1.Client.Services;
 
@@ -22,6 +24,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
     private readonly ILogger<DataService> _logger = logger;
     private readonly IConfiguration _configuration = configuration;
     public DataContext DataContext { get; } = dataContext;
+    private const string ConnectionString = "Data Source=number.db";
 
     /// <summary>
     /// Save the list of data to the SQLite Database
@@ -44,6 +47,41 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
     }
 
     /// <summary>
+    /// Save the list of data to the SQLite Database using raw SQL
+    /// </summary>
+    /// <param name="data"></param>
+    public async Task SaveDataAsync(List<int> data)
+    {
+        using var connection = new SqliteConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        using var transaction = connection.BeginTransaction();
+        var command = connection.CreateCommand();
+        command.CommandText = "INSERT INTO Number (Value, IsPrime) VALUES (@Value, @IsPrime)";
+
+        foreach (var number in data)
+        {
+            command.Parameters.AddWithValue("@Value", number);
+            command.Parameters.AddWithValue("@IsPrime", IsPrime(number) ? 1 : 0);
+            await command.ExecuteNonQueryAsync();
+        }
+
+        await transaction.CommitAsync();
+    }
+
+    private bool IsPrime(int number)
+    {
+        if (number <= 1) return false;
+        if (number == 2) return true;
+        if (number % 2 == 0) return false;
+        for (int i = 3; i <= Math.Sqrt(number); i += 2)
+        {
+            if (number % i == 0) return false;
+        }
+        return true;
+    }
+
+    /// <summary>
     /// Fetch N records from the SQLite Database where N is specified by the count parameter
     /// </summary>
     /// <param name="count"></param>
@@ -53,8 +91,8 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
         _logger.LogInformation(nameof(GetAsync));
 
         return await DataContext.Numbers
-            .Take(count)
             .OrderBy(n => n.Value)
+            .Take(count)
             .ToListAsync();
     }
 
@@ -116,4 +154,6 @@ public interface IDataService
     Task<IEnumerable<Number>> GetAllAsync();
 
     Task SaveAsync(List<Number> numbersList);
+
+    Task SaveDataAsync(List<int> data);
 }

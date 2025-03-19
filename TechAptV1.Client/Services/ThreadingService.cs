@@ -1,6 +1,8 @@
 ﻿// Copyright © 2025 Always Active Technologies PTY Ltd
 
 using TechAptV1.Client.Models;
+using System.Collections.Concurrent;
+using System.Threading.Tasks;
 
 namespace TechAptV1.Client.Services;
 
@@ -30,6 +32,8 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
 
     private List<Number> _numbers = new();
     public List<Number> GetNumbers() => _numbers;
+
+    private ConcurrentBag<int> globalList = new ConcurrentBag<int>();
 
     /// <summary>
     /// Persist the results to the SQLite database
@@ -149,6 +153,42 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
             }
             return true;
         }
+
+    public async Task ComputeDataAsync()
+    {
+        var oddThread = Task.Run(() => AddOddNumbers());
+        var primeThread = Task.Run(() => AddNegatedPrimeNumbers());
+
+        await Task.WhenAll(oddThread, primeThread);
+
+        if (globalList.Count >= 2500000)
+        {
+            var evenThread = Task.Run(() => AddEvenNumbers());
+            await evenThread;
+        }
+
+        globalList = new ConcurrentBag<int>(globalList.OrderBy(x => x));
+    }
+
+    private void AddOddNumbers()
+    {
+        // ...existing code to add odd numbers...
+    }
+
+    private void AddNegatedPrimeNumbers()
+    {
+        // ...existing code to add negated prime numbers...
+    }
+
+    private void AddEvenNumbers()
+    {
+        // ...existing code to add even numbers...
+    }
+
+    public List<int> GetComputedData()
+    {
+        return globalList.ToList();
+    }
 }
 
 public interface IThreadingService
