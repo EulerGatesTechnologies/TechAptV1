@@ -40,6 +40,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
 
             throw new ArgumentNullException(nameof(numbersList));
         }
+        await DataContext.Database.ExecuteSqlRawAsync("DELETE FROM Number"); // Clear existing data
 
         await DataContext.AddRangeAsync(numbersList);
 

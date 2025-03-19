@@ -41,8 +41,6 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
     {
         logger.LogInformation(nameof(SaveAsync));
 
-
-
         await dataService.SaveAsync(_numbers);
     }
 
