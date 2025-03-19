@@ -15,8 +15,8 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
 : IThreadingService
 {
     private readonly object _lock = new(); // This will be used for Thead-Safety lock on shared global variable.
-    private const int MAX_ENTRIES = 10_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
-    private const int EVEN_THREAD_TRIGGER_THRESHOLD = 2_500; // TODO: We would like to have this read from the config file, rather then hardcoded.
+    private const int MAX_ENTRIES = 10_000_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
+    private const int EVEN_THREAD_TRIGGER_THRESHOLD = 2_500_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
     private ConcurrentBag<int> globalList = new ConcurrentBag<int>();
 
     private int _oddNumbers = 0;
