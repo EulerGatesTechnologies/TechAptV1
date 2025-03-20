@@ -25,7 +25,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
     public DataContext DataContext { get; } = dataContext;
 
     // Update: Use the configuration to get the connection string.
-    private string ConnectionString => configuration?.GetConnectionString("DefaultConnection") ?? "Data Source=database.db";
+    private string ConnectionString => configuration?.GetConnectionString("DefaultConnection");
 
     /// <summary>
     /// Save the list of data to the SQLite Database
@@ -42,30 +42,23 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
             throw new ArgumentNullException(message, nameof(dataList));
         }
 
-        _logger.LogInformation(nameof(SaveAsync));
-
-        await DataContext.Numbers.AddRangeAsync(dataList);
-
-        await DataContext.SaveChangesAsync();
-    }
-    public async Task SaveAsyncEx(List<Number> dataList)
-    {
-        if (dataList == null)
-        {
-            string message = $"Numbers list is null in {nameof(SaveAsync)}";
-
-            _logger.LogError(message, nameof(SaveAsync));
-
-            throw new ArgumentNullException(message, nameof(dataList));
-        }
-
          _logger.LogInformation(nameof(SaveAsync));
         // Update: use raw SQL for inserts, batching the records to improve performance.
         using (var connection = new SqliteConnection(ConnectionString))
         {
             await connection.OpenAsync();
             // Ensure that the table exists.
+             // This is more robust & durable as we have witnessed with some tests
+            var tableCmd = connection.CreateCommand();
 
+            tableCmd.CommandText = @"
+                CREATE TABLE IF NOT EXISTS ""Number"" (
+                    ""Value"" INTEGER NOT NULL,
+                    ""IsPrime"" INTEGER NOT NULL DEFAULT 0
+                );
+            ";
+
+            tableCmd.ExecuteNonQuery();
             // Begin a transaction to efficiently insert many records.
             using (var transaction = connection.BeginTransaction())
             {

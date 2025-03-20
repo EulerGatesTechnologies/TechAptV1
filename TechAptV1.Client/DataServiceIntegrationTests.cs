@@ -35,17 +35,16 @@ public class DataServiceIntegrationTests
     public async Task SaveAsync_WhenNumbersListIsNotEmpty_ThenShouldSaveToSqliteDatabase()
     {
         // Arrange
-        var random = new Random();
-
         var numbersList = new List<Number>();
 
-        // Create a list of 1000 random numbers with IsPrime flag set randomly 0 or 1
-        for (int i = 0; i < 1000; i++)
+        const int NUMBER_COUNT = 10_000;
+        // Create a list of sequential numbers with alternating IsPrime flag
+        for (int i = 1; i <= NUMBER_COUNT; i++)
         {
             numbersList.Add(new Number
             {
-                Value = random.Next(1, 1000000),
-                IsPrime = random.Next(0, 2) == 1
+                Value = i,
+                IsPrime = i % 2 == 0  // Alternating true/false for simplicity
             });
         }
 
