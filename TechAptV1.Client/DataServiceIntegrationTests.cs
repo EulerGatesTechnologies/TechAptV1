@@ -28,7 +28,7 @@ public class DataServiceIntegrationTests
 
     // Create a fresh in-memory database for each test.
     private DataContext CreateInMemoryDatabase() => new DataContext(new DbContextOptionsBuilder<DataContext>()
-            .UseInMemoryDatabase($"InMemoryNumbersTestDb_{Guid.NewGuid().ToString()}")
+            .UseInMemoryDatabase($"InMemoryNumbersTestDb_{Guid.NewGuid()}")
             .Options);
 
     [Fact]
@@ -53,7 +53,7 @@ public class DataServiceIntegrationTests
         await _dataService.SaveAsync(numbersList);
 
         // Assert
-        var savedNumbers = await _dataContext.Numbers.ToListAsync();
+        var savedNumbers = await _dataService.GetAllAsync();
 
         numbersList.Count.ShouldBe(savedNumbers.Count());
 
