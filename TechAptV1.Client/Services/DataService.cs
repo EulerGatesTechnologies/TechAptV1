@@ -25,7 +25,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
     public DataContext DataContext { get; } = dataContext;
 
     // Update: Use the configuration to get the connection string.
-    private string ConnectionString => configuration?.GetConnectionString("DefaultConnection");
+    public string ConnectionString {get;  } = configuration?.GetConnectionString("Default");
 
     /// <summary>
     /// Save the list of data to the SQLite Database
@@ -43,6 +43,10 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
         }
 
          _logger.LogInformation(nameof(SaveAsync));
+
+        // Clear existing data
+        await DataContext.Database.ExecuteSqlRawAsync("DELETE FROM Number");
+
         // Update: use raw SQL for inserts, batching the records to improve performance.
         using (var connection = new SqliteConnection(ConnectionString))
         {

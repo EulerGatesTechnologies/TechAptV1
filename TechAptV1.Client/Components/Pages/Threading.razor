@@ -95,6 +95,8 @@ else
     {
         this.Logger.LogInformation(nameof(SaveAsync));
 
+        isComputing = true;
+
         if(Result != null)
         {
             try
