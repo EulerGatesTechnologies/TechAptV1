@@ -7,7 +7,6 @@ using System.Xml.Serialization;
 using TechAptV1.Client.Data;
 using System.Text;
 using Microsoft.Data.Sqlite;
-using System.Threading.Tasks;
 
 namespace TechAptV1.Client.Services;
 
@@ -38,9 +37,11 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
 
         if (dataList == null)
         {
-            _logger.LogError(nameof(dataList));
+            string message = $"Numbers list is null in {nameof(SaveAsync)}";
 
-            throw new ArgumentNullException(nameof(dataList));
+            _logger.LogError(message, nameof(SaveAsync));
+
+            throw new ArgumentNullException(message, nameof(dataList));
         }
         // Update: use raw SQL for inserts, batching the records to improve performance.
         using (var connection = new SqliteConnection(ConnectionString))
