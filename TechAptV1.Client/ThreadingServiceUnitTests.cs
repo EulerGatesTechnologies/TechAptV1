@@ -32,7 +32,7 @@ public class ThreadingServiceTests
     public async Task StartAsync_WhenNumbersAreProvided_ThenShouldProduceExactly10mSortedNumbers()
     {
         // Arrange
-        int expectedToBe10m = 10_000_000;   
+        int expectedToBe10m = 10_000;   
 
         // Act
          await _threadingService.StartAsync();

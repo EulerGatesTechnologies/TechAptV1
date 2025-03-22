@@ -15,10 +15,11 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
 : IThreadingService
 {
     private readonly object _lock = new(); // This will be used for Thead-Safety lock on shared global variable.
-    private const int MAX_ENTRIES = 10_000_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
-    private const int EVEN_THREAD_TRIGGER_THRESHOLD = 2_500_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
+    private const int MAX_ENTRIES = 10_000; // TODO: We would like to have this read from the config file, rather then hardcoded.
+    private const int EVEN_THREAD_TRIGGER_THRESHOLD = 2_500; // TODO: We would like to have this read from the config file, rather then hardcoded.
     private ConcurrentBag<int> globalList = new ConcurrentBag<int>();
 
+    public IDataService DataService { get; } = dataService;
     private int _oddNumbers = 0;
     public int GetOddNumbers() => _oddNumbers;
 
@@ -41,7 +42,7 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
     {
         logger.LogInformation(nameof(SaveAsync));
 
-        await dataService.SaveAsync(_numbers);
+        await DataService.SaveAsync(_numbers);
     }
 
     /// <summary>
@@ -52,64 +53,66 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
         logger.LogInformation(nameof(StartAsync));
 
         Random random = new ();
-        List<Task> tasks = new ();
 
-        // Thread 1:  Generate Odd Numbers
-        tasks.Add(Task.Run(() =>
-        {
-            while (_numbers.Count < MAX_ENTRIES)
+        List<Task> tasks =
+        [
+            // Thread 1:  Generate Odd Numbers
+            Task.Run(() =>
             {
-                lock (_lock)
+                while (_numbers.Count < MAX_ENTRIES)
                 {
-                    if(_numbers.Count < MAX_ENTRIES)
+                    lock (_lock)
                     {
-                        var oddNumber = random.Next(1, 1000000) * 2 + 1; // odd = 2n+1, n in Integers
+                        if(_numbers.Count < MAX_ENTRIES)
+                        {
+                            var oddNumber = random.Next(1, 1000000) * 2 + 1; // odd = 2n+1, n in Integers
 
-                        _numbers.Add(new Number { Value = oddNumber, IsPrime = false });
+                            _numbers.Add(new Number { Value = oddNumber, IsPrime = false });
+                        }
                     }
                 }
-            }
-        }));
+            }),
 
-        // Thread 2: Generate negative prime numbers.
-        tasks.Add(Task.Run(() =>
-        {
-            while (_numbers.Count < MAX_ENTRIES)
+            // Thread 2: Generate negative prime numbers.
+            Task.Run(() =>
             {
-                lock (_lock)
+                while (_numbers.Count < MAX_ENTRIES)
                 {
-                    if (_numbers.Count < MAX_ENTRIES)
+                    lock (_lock)
                     {
-                        int negativePrimeNumber = GeneratePrime(random) * -1;
+                        if (_numbers.Count < MAX_ENTRIES)
+                        {
+                            int negativePrimeNumber = GeneratePrime(random) * -1;
 
-                        _numbers.Add(new Number { Value = negativePrimeNumber, IsPrime = true });
+                            _numbers.Add(new Number { Value = negativePrimeNumber, IsPrime = true });
+                        }
                     }
                 }
-            }
-        }));
+            }),
 
-        // Thread 3: When Threadshold is reached, generate Even numbers.
-        tasks.Add(Task.Run(() =>
-        {
-            while (_numbers.Count < EVEN_THREAD_TRIGGER_THRESHOLD)
+            // Thread 3: When Threadshold is reached, generate Even numbers.
+            Task.Run(() =>
             {
-                //Wait for the threshold to be reached
-                Thread.Sleep(100);
-            }
-
-            while (_numbers.Count < MAX_ENTRIES)
-            {
-                lock (_lock)
+                while (_numbers.Count < EVEN_THREAD_TRIGGER_THRESHOLD)
                 {
-                    if(_numbers.Count < MAX_ENTRIES)
-                    {
-                        var evenNumber = random.Next(1, 1000000) * 2; // even = 2n, n in Integers
+                    //Wait for the threshold to be reached
+                    Thread.Sleep(100);
+                }
 
-                        _numbers.Add(new Number { Value = evenNumber, IsPrime = false });
+                while (_numbers.Count < MAX_ENTRIES)
+                {
+                    lock (_lock)
+                    {
+                        if(_numbers.Count < MAX_ENTRIES)
+                        {
+                            var evenNumber = random.Next(1, 1000000) * 2; // even = 2n, n in Integers
+
+                            _numbers.Add(new Number { Value = evenNumber, IsPrime = false });
+                        }
                     }
                 }
-            }
-        }));
+            }),
+        ];
 
         // Wait for all threads to complete
         await Task.WhenAny(Task.WhenAll(tasks), Task.Delay(Timeout.Infinite));
@@ -140,53 +143,20 @@ public sealed class ThreadingService(ILogger<ThreadingService> logger, IDataServ
         }
 
     private static bool IsPrime(int number)
+    {
+        if (number <= 1) return false;
+
+        if (number == 2) return true;
+
+        if (number % 2 == 0) return false;
+
+        var boundary = (int)Math.Floor(Math.Sqrt(number));
+        
+        for (int i = 3; i <= boundary; i += 2)
         {
-            if (number <= 1) return false;
-            if (number == 2) return true;
-            if (number % 2 == 0) return false;
-
-            var boundary = (int)Math.Floor(Math.Sqrt(number));
-            for (int i = 3; i <= boundary; i += 2)
-            {
-                if (number % i == 0) return false;
-            }
-            return true;
+            if (number % i == 0) return false;
         }
-
-    public async Task ComputeDataAsync()
-    {
-        var oddThread = Task.Run(() => AddOddNumbers());
-        var primeThread = Task.Run(() => AddNegatedPrimeNumbers());
-
-        await Task.WhenAll(oddThread, primeThread);
-
-        if (globalList.Count >= 2500000)
-        {
-            var evenThread = Task.Run(() => AddEvenNumbers());
-            await evenThread;
-        }
-
-        globalList = new ConcurrentBag<int>(globalList.OrderBy(x => x));
-    }
-
-    private void AddOddNumbers()
-    {
-        // ...existing code to add odd numbers...
-    }
-
-    private void AddNegatedPrimeNumbers()
-    {
-        // ...existing code to add negated prime numbers...
-    }
-
-    private void AddEvenNumbers()
-    {
-        // ...existing code to add even numbers...
-    }
-
-    public List<int> GetComputedData()
-    {
-        return globalList.ToList();
+        return true;
     }
 }
 

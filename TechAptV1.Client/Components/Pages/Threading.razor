@@ -4,22 +4,20 @@
 @using TechAptV1.Client.Models;
 
 @inject IThreadingService ThreadingService
-
-
 @inject IJSRuntime JS
 
 <h3>Threading &amp; Data Persistence</h3>
 
 <div>
     <button class="btn btn-primary" @onclick="(async () => await this.StartAsync())" disabled="@isComputing">Start</button>
-    <button class="btn btn-primary" @onclick="(async () => await this.SaveAsync())" disabled="@(!IsDataAvailable)">Save</button>
+    <button class="btn btn-primary" @onclick="(async () => await this.SaveAsync())" disabled="@(IsDataAvailable==false)">Save</button>
 </div>
 
-@if (isComputing)
+@if (isComputing == true)
 {
     <p>Computing... Please wait...</p>
 }
-else
+else if(Result != null)
 {
     <div>
         <hr>
@@ -34,47 +32,46 @@ else
     </div>
 }
 
+@if (isSaving == true)
+{
+    <p>Saving... @saveProgress%</p>
+}
+
 @code {
 
     [Inject] public required ILogger<Threading> Logger { get; set; }
 
+    private bool isSaving = false;
+    private int saveProgress = 0;
     private bool isComputing = false;
-
-    private bool IsDataAvailable => (Result != null) && (!isComputing); // Assert we are ready with data to be saved
+    private bool IsDataAvailable => (Result != null) && (isComputing == false) && (isSaving == false); // Assert we are ready with data to be saved
 
     private (List<Number> Numbers, int TotalNumbersCount, int OddNumbersCount, int EvenNumbersCount, int PrimeNumbersCount)? Result { get; set;}
 
     private async Task StartAsync()
     {
-        this.Logger.LogInformation(nameof(StartAsync));
-
         isComputing = true;
 
-        StateHasChanged();
+        this.Logger.LogInformation(nameof(StartAsync));
 
         try
         {
 
             if (ThreadingService is ThreadingService threadingService)
             {
-                this.Logger.LogInformation($"Starting {nameof(ThreadingService)}...");
+                this.Logger.LogInformation("Computation Started...");
 
                 await ThreadingService.StartAsync();
 
-                Result =
-                (
-                    threadingService.GetNumbers(),
-                    threadingService.GetTotalNumbers(),
-                    threadingService.GetOddNumbers(),
-                    threadingService.GetEvenNumbers(),
-                    threadingService.GetPrimeNumbers()
-                );
+                Result = (threadingService.GetNumbers(), threadingService.GetTotalNumbers(), threadingService.GetOddNumbers(), threadingService.GetEvenNumbers(), threadingService.GetPrimeNumbers());
 
-                this.Logger.LogInformation("Data computed successfully...");
+                this.Logger.LogInformation("Computation Completed...");
             }
             else
             {
-                Result = null;
+                this.Logger.LogWarning("ThreadingService is not of type IThreadingService");
+
+                await JS.InvokeVoidAsync("alert", "ThreadingService is not of type IThreadingService.");
             }
         }
         catch (Exception exception)
@@ -95,21 +92,34 @@ else
     {
         this.Logger.LogInformation(nameof(SaveAsync));
 
-        isComputing = true;
-
         if(Result != null)
         {
+            isSaving = true;
+
+            saveProgress = 0;
+
             try
             {
                 if (ThreadingService is ThreadingService threadingService)
                 {
-                    this.Logger.LogInformation($"Saving {nameof(ThreadingService)}...");
+                    this.Logger.LogInformation($"Saving Started...");
 
-                    await threadingService.SaveAsync();
+                    // Run the save operation on a background thread
+                    await Task.Run(async () =>
+                    {
+                        var progress =  new Progress<int>((percent) =>
+                        {
+                            saveProgress = percent;
 
-                    this.Logger.LogInformation("Data saved successfully....");
+                            StateHasChanged();
+                        });
 
-                    await JS.InvokeVoidAsync("alert", "Data saved successfully.");
+                        await threadingService.DataService.SaveAsync(Result.Value.Numbers, progress);
+                    });
+
+                    this.Logger.LogInformation("Saving Completed...");
+
+                    await JS.InvokeVoidAsync("alert", "Saving Completed...");
                 }
                 else
                 {
@@ -120,7 +130,7 @@ else
             }
             finally
             {
-                isComputing = false;
+                isSaving = false;
 
                 StateHasChanged();
             }

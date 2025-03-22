@@ -3,10 +3,10 @@
 using TechAptV1.Client.Models;
 
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Data.Sqlite;
 using System.Xml.Serialization;
 using TechAptV1.Client.Data;
 using System.Text;
-using Microsoft.Data.Sqlite;
 
 namespace TechAptV1.Client.Services;
 
@@ -31,7 +31,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
     /// Save the list of data to the SQLite Database
     /// </summary>
     /// <param name="dataList"></param>
-    public async Task SaveAsync(List<Number> dataList)
+    public async Task SaveAsync(List<Number> dataList, IProgress<int> progress = null)
     {
         if (dataList == null)
         {
@@ -42,54 +42,71 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
             throw new ArgumentNullException(message, nameof(dataList));
         }
 
-         _logger.LogInformation(nameof(SaveAsync));
+        _logger.LogInformation(nameof(SaveAsync));
+
+        const int batchSize = 1000; // Insert 1,000 records per batch
+        int totalRecords = dataList.Count;
+        int processedRecords = 0;
 
         // Clear existing data
         await DataContext.Database.ExecuteSqlRawAsync("DELETE FROM Number");
 
-        // Update: use raw SQL for inserts, batching the records to improve performance.
-        using (var connection = new SqliteConnection(ConnectionString))
+        // Use SQLite for efficient bulk inserts
+        using var connection = new SqliteConnection(ConnectionString);
+        await connection.OpenAsync();
+
+        // Begin transaction
+        using var transaction = connection.BeginTransaction();
+
+        try
         {
-            await connection.OpenAsync();
-            // Ensure that the table exists.
-             // This is more robust & durable as we have witnessed with some tests
-            var tableCmd = connection.CreateCommand();
-
-            tableCmd.CommandText = @"
-                CREATE TABLE IF NOT EXISTS ""Number"" (
-                    ""Value"" INTEGER NOT NULL,
-                    ""IsPrime"" INTEGER NOT NULL DEFAULT 0
-                );
-            ";
-
-            tableCmd.ExecuteNonQuery();
-            // Begin a transaction to efficiently insert many records.
-            using (var transaction = connection.BeginTransaction())
+            for (int start = 0; start < totalRecords; start += batchSize)
             {
-                var insertCmd = connection.CreateCommand();
-                insertCmd.CommandText = "INSERT INTO \"Number\" (Value, IsPrime) VALUES (@value, @isPrime)";
+                int currentBatchSize = Math.Min(batchSize, totalRecords - start);
+                var batch = dataList.Skip(start).Take(currentBatchSize).ToList();
 
-                // Create parameters to avoid re-creating them on each insert.
-                SqliteParameter valueParam = insertCmd.CreateParameter();
-                valueParam.ParameterName = "@value";
-                insertCmd.Parameters.Add(valueParam);
-
-                SqliteParameter isPrimeParam = insertCmd.CreateParameter();
-                isPrimeParam.ParameterName = "@isPrime";
-                insertCmd.Parameters.Add(isPrimeParam);
-
-                foreach (Number number in dataList)
+                // Dynamically build the INSERT statement for this batch
+                var sb = new StringBuilder("INSERT INTO Number (Value, IsPrime) VALUES ");
+                for (int i = 0; i < currentBatchSize; i++)
                 {
-                    valueParam.Value = number.Value;
-
-                    isPrimeParam.Value = number.IsPrime ? 1 : 0;
-
-                    insertCmd.ExecuteNonQuery();
+                    if (i > 0) sb.Append(",");
+                    sb.Append($"(@value{i}, @isPrime{i})");
                 }
 
-                await transaction.CommitAsync();
+                using var command = connection.CreateCommand();
+                command.Transaction = transaction;
+                command.CommandText = sb.ToString();
+
+                // Add parameters for this batch
+                for (int i = 0; i < currentBatchSize; i++)
+                {
+                    command.Parameters.AddWithValue($"@value{i}", batch[i].Value);
+                    command.Parameters.AddWithValue($"@isPrime{i}", batch[i].IsPrime);
+                }
+
+                await command.ExecuteNonQueryAsync();
+
+                processedRecords += currentBatchSize;
+                if (progress != null)
+                {
+                    int percentage = (int)((double)processedRecords / totalRecords * 100);
+                    progress.Report(percentage);
+                }
             }
+
+            // Commit the transaction
+            transaction.Commit();
         }
+        catch (Exception)
+        {
+            transaction.Rollback();
+            throw;
+        }
+        finally
+        {
+            connection.Close();
+        }
+
     }
 
     private bool IsPrime(int number)
@@ -177,5 +194,5 @@ public interface IDataService
 
     Task<IEnumerable<Number>> GetAllAsync();
 
-    Task SaveAsync(List<Number> List);
+    Task SaveAsync(List<Number> List, IProgress<int> progress = null);
 }
