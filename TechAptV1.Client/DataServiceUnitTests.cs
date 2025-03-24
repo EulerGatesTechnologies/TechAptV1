@@ -31,10 +31,10 @@ public class DataServiceUnitTests
             .Setup(x => x.GetConnectionString("Default"))
             .Returns("Data Source=test.db");
 
-        var service = new DataService(_loggerMock.Object, _configMock.Object, _dataContextMock.Object);
+        _dataService = new DataService(_loggerMock.Object, _configMock.Object, _dataContextMock.Object);
 
         // Act
-        var connectionString = service.ConnectionString;
+        string connectionString = _dataService.ConnectionString;
 
         // Assert
         connectionString.ShouldNotBeNullOrWhiteSpace();
@@ -59,9 +59,10 @@ public class DataServiceUnitTests
             .Setup(x => x.GetConnectionString("Default"))
             .Returns((string)null);
 
-        var service = new DataService(_loggerMock.Object, _configMock.Object, _dataContextMock.Object);
+        _dataService = new DataService(_loggerMock.Object, _configMock.Object, _dataContextMock.Object);
 
         // Act & Assert
-        Should.Throw<InvalidOperationException>(() => service.ConnectionString);
+        Should.Throw<InvalidOperationException>(() => _dataService.ConnectionString);
     }
 }
+

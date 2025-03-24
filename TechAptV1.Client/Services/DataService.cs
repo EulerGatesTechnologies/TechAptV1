@@ -3,7 +3,7 @@
 using TechAptV1.Client.Models;
 
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Data.Sqlite;
+using System.Data.SQLite;
 using System.Xml.Serialization;
 using TechAptV1.Client.Data;
 using System.Text;
@@ -25,7 +25,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
     public DataContext DataContext { get; } = dataContext;
 
     // Update: Use the configuration to get the connection string.
-    public string ConnectionString {get;  } = configuration?.GetConnectionString("Default");
+    public string ConnectionString { get;  } = configuration?.GetConnectionString("Default");
 
     /// <summary>
     /// Save the list of data to the SQLite Database
@@ -42,17 +42,23 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
             throw new ArgumentNullException(message, nameof(dataList));
         }
 
-        _logger.LogInformation(nameof(SaveAsync));
-
-        const int batchSize = 1000; // Insert 1,000 records per batch
+        const int batchSize = 1000;
         int totalRecords = dataList.Count;
         int processedRecords = 0;
+
+        _logger.LogInformation($"{nameof(SaveAsync)} - Starting to save '{totalRecords}' records, with batch size '{batchSize}', so far processed '{processedRecords}'...");
+
+        // Ensure we have a valid connection string
+        if (string.IsNullOrEmpty(ConnectionString))
+        {
+            throw new InvalidOperationException("Database connection string is not properly configured.");
+        }
 
         // Clear existing data
         await DataContext.Database.ExecuteSqlRawAsync("DELETE FROM Number");
 
-        // Use SQLite for efficient bulk inserts
-        using var connection = new SqliteConnection(ConnectionString);
+        // Use System.Data.SQLite for efficient bulk inserts
+        using var connection = new SQLiteConnection(ConnectionString);
         await connection.OpenAsync();
 
         // Begin transaction
@@ -63,10 +69,12 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
             for (int start = 0; start < totalRecords; start += batchSize)
             {
                 int currentBatchSize = Math.Min(batchSize, totalRecords - start);
+
                 var batch = dataList.Skip(start).Take(currentBatchSize).ToList();
 
                 // Dynamically build the INSERT statement for this batch
-                var sb = new StringBuilder("INSERT INTO Number (Value, IsPrime) VALUES ");
+                var sb = new StringBuilder("INSERT OR IGNORE INTO Number (Value, IsPrime) VALUES ");
+
                 for (int i = 0; i < currentBatchSize; i++)
                 {
                     if (i > 0) sb.Append(",");
@@ -87,6 +95,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
                 await command.ExecuteNonQueryAsync();
 
                 processedRecords += currentBatchSize;
+
                 if (progress != null)
                 {
                     int percentage = (int)((double)processedRecords / totalRecords * 100);
@@ -106,7 +115,6 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
         {
             connection.Close();
         }
-
     }
 
     private bool IsPrime(int number)
