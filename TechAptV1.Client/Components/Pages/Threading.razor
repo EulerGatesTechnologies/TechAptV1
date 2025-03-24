@@ -4,7 +4,6 @@
 @using TechAptV1.Client.Models;
 
 @inject IThreadingService ThreadingService
-@inject IDataService DataService
 
 @inject IJSRuntime JS
 
@@ -114,7 +113,7 @@ else if(Result != null)
                     this.Logger.LogInformation($"Saving Started...");
 
                     // Run the save operation on a background thread
-                    await DataService.SaveAsync(Result.Value.Numbers, progress);
+                    await threadingService.DataService.SaveAsync(Result.Value.Numbers, progress);
 
                     this.Logger.LogInformation("Saving Completed...");
 
