@@ -10,8 +10,8 @@ using TechAptV1.Client.Data;
 namespace TechAptV1.Client.Migrations
 {
     [DbContext(typeof(DataContext))]
-    [Migration("20250318075126_InitialCreate")]
-    partial class InitialCreate
+    [Migration("20250324131406_Inital")]
+    partial class Inital
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -21,19 +21,18 @@ namespace TechAptV1.Client.Migrations
 
             modelBuilder.Entity("TechAptV1.Client.Models.Number", b =>
                 {
-                    b.Property<int>("Id")
+                    b.Property<int>("Value")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER");
 
-                    b.Property<int>("IsPrime")
+                    b.Property<bool>("IsPrime")
                         .ValueGeneratedOnAdd()
                         .HasColumnType("INTEGER")
-                        .HasDefaultValue(0);
+                        .HasDefaultValue(false);
 
-                    b.Property<int>("Value")
-                        .HasColumnType("INTEGER");
+                    b.HasKey("Value");
 
-                    b.HasKey("Id");
+                    b.HasIndex("Value");
 
                     b.ToTable("Number", (string)null);
                 });
