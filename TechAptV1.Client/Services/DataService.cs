@@ -19,13 +19,14 @@ namespace TechAptV1.Client.Services;
 /// <param name="logger"></param>
 /// <param name="configuration"></param>
 public sealed class DataService(ILogger<DataService> logger, IConfiguration configuration, DataContext dataContext) : IDataService
-{
+{    
     private readonly ILogger<DataService> _logger = logger;
 
     public DataContext DataContext { get; } = dataContext;
 
     // Update: Use the configuration to get the connection string.
     public string ConnectionString { get;  } = configuration?.GetConnectionString("Default");
+       
 
     /// <summary>
     /// Save the list of data to the SQLite Database
@@ -46,7 +47,7 @@ public sealed class DataService(ILogger<DataService> logger, IConfiguration conf
         int totalRecords = dataList.Count;
         int processedRecords = 0;
 
-        _logger.LogInformation($"{nameof(SaveAsync)} - Starting to save '{totalRecords}' records, with batch size '{batchSize}', so far processed '{processedRecords}'...");
+        _logger.LogInformation($"{nameof(SaveAsync)} - Starting to save '{totalRecords}' records, with batch size '{batchSize}', completed '{processedRecords}'...");
 
         // Ensure we have a valid connection string
         if (string.IsNullOrEmpty(ConnectionString))

@@ -19,6 +19,9 @@ namespace TechAptV1.Client
 
                 var builder = WebApplication.CreateBuilder(args);
 
+                // Add configuration binding
+                builder.Configuration.AddJsonFile("appsettings.json", optional: false, reloadOnChange: true);
+
                 builder.Services.AddSerilog(lc => lc
                     .WriteTo.Console(outputTemplate: "[{Timestamp:HH:mm:ss} {Level}] [{SourceContext}] {Message:lj}{NewLine}{Exception}")
                     .ReadFrom.Configuration(builder.Configuration));
